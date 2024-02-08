@@ -5,8 +5,10 @@ import UserContext from "../context/UserContext";
 import SocketClientContext from "../context/SocketClientContext";
 
 let subscription;
-const ChatView = ({ convId }) => {
-  const { username } = useContext(UserContext);
+const ChatView = ({ friend }) => {
+  const { connectionId, connectionUsername, convId } = friend;
+  const { username: currentUserUsername, id: currentUserId } =
+    useContext(UserContext);
   const obj = useContext(SocketClientContext);
   const { socketClient: client } = obj;
   const [messages, setMessages] = useState([]);
@@ -37,9 +39,12 @@ const ChatView = ({ convId }) => {
     client.publish({
       destination: `/app/chat/sendMessage/${convId}`,
       body: {
-        sender: username,
         messageType: "CHAT",
         content: message,
+        receiverId: connectionId,
+        receiverUsername: connectionUsername,
+        senderId: currentUserId,
+        senderUsername: currentUserUsername,
       },
     });
     setUserMessage("");
@@ -54,7 +59,7 @@ const ChatView = ({ convId }) => {
           .map((message, idx) => {
             return (
               <div key={idx}>
-                {message.sender}: {message.content}
+                {message.senderUsername}: {message.content}
               </div>
             );
           })}

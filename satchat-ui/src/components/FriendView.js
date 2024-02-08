@@ -8,7 +8,7 @@ import backendClient from "../utils/BackendClient";
 const FriendView = () => {
   const { username, token } = useContext(UserContext);
   const [friendList, setFriendList] = useState([]);
-  const [selectedConvId, setSelectedConvId] = useState(null);
+  const [selectedFriend, setSelectedFriend] = useState(null);
 
   useEffect(() => {
     const loadFriends = async (username) => {
@@ -26,15 +26,15 @@ const FriendView = () => {
         friendList.map((friend, idx) => (
           <div key={idx}>
             <Button
-              onClick={() => setSelectedConvId(friend.convId)}
-              displayText={`Chat with ${friend.username}`}
+              onClick={() => setSelectedFriend(friend)}
+              displayText={`Chat with ${friend.connectionUsername}`}
             />
           </div>
         ))}
-      {selectedConvId && (
+      {selectedFriend && (
         <div>
           <br />
-          <ChatView convId={selectedConvId}></ChatView>{" "}
+          <ChatView friend={selectedFriend}></ChatView>{" "}
         </div>
       )}
     </div>

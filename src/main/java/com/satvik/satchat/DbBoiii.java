@@ -16,5 +16,4 @@ public class DbBoiii {
         return id1.compareTo(id2) > 0 ? id2+"_"+id1 : id1+"_"+id2;
     }
 
-
 }

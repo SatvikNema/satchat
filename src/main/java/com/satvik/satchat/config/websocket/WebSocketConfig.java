@@ -1,4 +1,4 @@
-package com.satvik.satchat.config;
+package com.satvik.satchat.config.websocket;
 
 import com.satvik.satchat.filter.WebSocketTokenFilter;
 import org.springframework.context.annotation.Bean;

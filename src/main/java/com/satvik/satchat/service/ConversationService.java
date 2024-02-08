@@ -21,11 +21,19 @@ public class ConversationService {
     public List<UserConnection> getUserFriends(String username) {
         List<UserEntity> users = userRepository.findAll();
         UserEntity thisUser = users.stream()
-                .filter(user -> user.getUsername().equals(username)).findFirst().orElseThrow(EntityException::new);
+                .filter(user -> user.getUsername().equals(username))
+                .findFirst()
+                .orElseThrow(EntityException::new);
 
         return users.stream()
                 .filter(user -> !user.getUsername().equals(username))
-                .map(user -> UserConnection.builder().username(user.getUsername()).convId(getConvId(user, thisUser)).build())
+                .map(user ->
+                        UserConnection
+                                .builder()
+                                .connectionId(user.getId())
+                                .connectionUsername(user.getUsername())
+                                .convId(getConvId(user, thisUser))
+                                .build())
                 .toList();
     }
 }

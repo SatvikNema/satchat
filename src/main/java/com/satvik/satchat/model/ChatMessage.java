@@ -2,6 +2,8 @@ package com.satvik.satchat.model;
 
 import lombok.*;
 
+import java.util.UUID;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -10,6 +12,11 @@ import lombok.*;
 @ToString
 public class ChatMessage {
     private String content;
-    private String sender;
     private MessageType messageType;
+
+    private UUID senderId;
+    private String senderUsername;
+
+    private UUID receiverId;
+    private String receiverUsername;
 }
