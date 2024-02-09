@@ -1,18 +1,18 @@
-import React, { useContext, useRef, useState, useEffect } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import TextInput from "./TextInput";
 import Button from "./Button";
-import UserContext from "../context/UserContext";
 import SocketClientContext from "../context/SocketClientContext";
 
 let subscription;
-const ChatView = ({ friend }) => {
+const ChatView = ({ friend, unSeenMessages }) => {
   const { connectionId, connectionUsername, convId } = friend;
-  const { username: currentUserUsername, id: currentUserId } =
-    useContext(UserContext);
   const obj = useContext(SocketClientContext);
   const { socketClient: client } = obj;
   const [messages, setMessages] = useState([]);
   const [userMessage, setUserMessage] = useState("");
+  if (unSeenMessages && unSeenMessages.length > 0) {
+    console.log("wat");
+  }
 
   useEffect(() => {
     if (client && client.connected) {
@@ -43,8 +43,6 @@ const ChatView = ({ friend }) => {
         content: message,
         receiverId: connectionId,
         receiverUsername: connectionUsername,
-        senderId: currentUserId,
-        senderUsername: currentUserUsername,
       },
     });
     setUserMessage("");
@@ -53,6 +51,20 @@ const ChatView = ({ friend }) => {
   return (
     <div>
       ChatView
+      {unSeenMessages && unSeenMessages.length > 0 && (
+        // <div>There are some unseen messages</div>
+        <div>
+          unseen =======
+          {unSeenMessages.map((message, idx) => {
+            return (
+              <div key={idx}>
+                {message.senderUsername}: {message.content}
+              </div>
+            );
+          })}
+          =======
+        </div>
+      )}
       {messages.length > 0 &&
         messages
           .filter((message) => message.messageType == "CHAT")

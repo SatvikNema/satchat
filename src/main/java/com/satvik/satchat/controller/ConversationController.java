@@ -1,5 +1,7 @@
 package com.satvik.satchat.controller;
 
+import com.satvik.satchat.entity.MessagesInTransitEntity;
+import com.satvik.satchat.model.ChatMessage;
 import com.satvik.satchat.model.UserConnection;
 import com.satvik.satchat.service.ConversationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +11,7 @@ import java.util.List;
 
 @RestController
 @CrossOrigin("*")
+@RequestMapping(("/api/conversation"))
 public class ConversationController {
 
     private final ConversationService conversationService;
@@ -18,9 +21,18 @@ public class ConversationController {
         this.conversationService = conversationService;
     }
 
-    @GetMapping("/{user}/friends")
-    public List<UserConnection> getUserFriends(@PathVariable("user") String username){
+    @GetMapping("/friends")
+    public List<UserConnection> getUserFriends(){
+        return conversationService.getUserFriends();
+    }
 
-        return conversationService.getUserFriends(username);
+    @GetMapping("/unseenMessages")
+    public List<ChatMessage> getUnseenMessages(){
+        return conversationService.getUnseenMessages();
+    }
+
+    @PutMapping("/setReadMessages")
+    public List<ChatMessage> setReadMessages(@RequestBody List<ChatMessage> chatMessages){
+        return conversationService.setReadMessages(chatMessages);
     }
 }

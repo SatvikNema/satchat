@@ -8,5 +8,6 @@ import lombok.Setter;
 public enum MessageType {
     CHAT,
     JOIN,
-    LEAVE
+    LEAVE,
+    UNSEEN
 }

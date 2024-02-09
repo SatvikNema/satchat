@@ -10,29 +10,31 @@ import SocketClient from "./socket/SocketClient";
 function App() {
   const [context, setContext] = useState({});
   const [socketClientContext, setSocketClientContext] = useState({});
+  const [unSeenMessages, setUnSeenMessages] = useState({});
 
   const loginUser = async ({ username }) => {
     const password = "password"; // todo load this from user input
     // login user and get the jwt
-    const requestPayload = JSON.stringify({
+
+    const jsonPayload = await backendClient.login({
       username,
       password,
     });
-    const response = await fetch(LOGIN_URL, {
-      method: "POST",
-      body: requestPayload,
-      headers: {
-        "content-type": "application/json",
-      },
-    });
-
-    const jsonPayload = await response.json();
     const { id, username: responseUsername, email, token } = jsonPayload;
     backendClient.jwt = token;
     setContext({ id, username: responseUsername, email, token });
 
     const socketClient = new SocketClient(webSocketUrl, token);
     setSocketClientContext({ socketClient });
+
+    const apiUnseenMessages = await backendClient.getUnseenMessages();
+    if (apiUnseenMessages && apiUnseenMessages.length > 0) {
+      const grouped = Object.groupBy(
+        apiUnseenMessages,
+        ({ senderUsername }) => senderUsername
+      );
+      setUnSeenMessages(grouped);
+    }
   };
 
   return (
@@ -42,7 +44,7 @@ function App() {
           <div>
             Currently logged in: {context.username}
             <br />
-            <FriendView />
+            <FriendView unSeenMessages={unSeenMessages} />
           </div>
         ) : (
           <UserSelection onUserContextSet={loginUser} />

@@ -15,30 +15,25 @@ import org.springframework.stereotype.Controller;
 @Slf4j
 public class ChatController {
 
-    private final SimpMessageSendingOperations simpMessageSendingOperations;
-
     private final ChatService chatService;
 
     @Autowired
-    public ChatController(SimpMessageSendingOperations simpMessageSendingOperations, ChatService chatService){
-        this.simpMessageSendingOperations = simpMessageSendingOperations;
+    public ChatController(ChatService chatService){
         this.chatService = chatService;
     }
 
-    @MessageMapping("/chat.sendMessage")
-    public ChatMessage sendMessage(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor){
-        log.info("message recieved: {}", chatMessage.toString());
-        String sessionId = headerAccessor.getSessionId();
-        simpMessageSendingOperations.convertAndSend("/topic/public", chatMessage);
-        return chatMessage;
-    }
-
-    @MessageMapping("/chat.addUser")
-    public ChatMessage addUser(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor){
-//        headerAccessor.getSessionAttributes().put("username", chatMessage.getSender());
-        simpMessageSendingOperations.convertAndSend("/topic/public", chatMessage);
-        return chatMessage;
-    }
+//    @MessageMapping("/chat.sendMessage")
+//    public ChatMessage sendMessage(@Payload ChatMessage chatMessage){
+//        log.info("message recieved: {}", chatMessage.toString());
+//        simpMessageSendingOperations.convertAndSend("/topic/public", chatMessage);
+//        return chatMessage;
+//    }
+//
+//    @MessageMapping("/chat.addUser")
+//    public ChatMessage addUser(@Payload ChatMessage chatMessage){
+//        simpMessageSendingOperations.convertAndSend("/topic/public", chatMessage);
+//        return chatMessage;
+//    }
 
     @MessageMapping("/chat/sendMessage/{convId}")
     public ChatMessage sendMessageToConvId(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor, @DestinationVariable("convId") String conversationId){

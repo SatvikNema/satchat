@@ -1,40 +1,59 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Button from "./Button";
 import ChatView from "./ChatView";
-import UserContext from "../context/UserContext";
-import { BASE_URL } from "../utils/GeneralConstants";
 import backendClient from "../utils/BackendClient";
 
-const FriendView = () => {
-  const { username, token } = useContext(UserContext);
+const FriendView = ({ unSeenMessages }) => {
   const [friendList, setFriendList] = useState([]);
   const [selectedFriend, setSelectedFriend] = useState(null);
+  const [friendUnSeenMessages, setFriendUnSeenMessages] = useState([]);
+
+  const handleSelectedFriend = (friend, apiFriendUnSeenMessages) => {
+    setSelectedFriend(friend);
+    setFriendUnSeenMessages(apiFriendUnSeenMessages);
+
+    backendClient.setReadMessages(apiFriendUnSeenMessages);
+  };
 
   useEffect(() => {
-    const loadFriends = async (username) => {
-      const data = await backendClient.getFriends(username, token);
+    const loadFriends = async () => {
+      const data = await backendClient.getFriends();
       setFriendList(data);
     };
 
-    loadFriends(username);
+    loadFriends();
   }, []);
 
   return (
     <div>
       FriendView
       {friendList.length > 0 &&
-        friendList.map((friend, idx) => (
-          <div key={idx}>
-            <Button
-              onClick={() => setSelectedFriend(friend)}
-              displayText={`Chat with ${friend.connectionUsername}`}
-            />
-          </div>
-        ))}
+        friendList.map((friend, idx) => {
+          const connectionUsername = friend.connectionUsername;
+          let displayText = `Chat with ${connectionUsername}`;
+          let apiFriendUnSeenMessages = [];
+          if (connectionUsername in unSeenMessages) {
+            apiFriendUnSeenMessages = unSeenMessages[connectionUsername];
+            displayText += ` (${apiFriendUnSeenMessages.length})`;
+          }
+          return (
+            <div key={idx}>
+              <Button
+                onClick={() => {
+                  handleSelectedFriend(friend, apiFriendUnSeenMessages);
+                }}
+                displayText={displayText}
+              />
+            </div>
+          );
+        })}
       {selectedFriend && (
         <div>
           <br />
-          <ChatView friend={selectedFriend}></ChatView>{" "}
+          <ChatView
+            friend={selectedFriend}
+            unSeenMessages={friendUnSeenMessages}
+          ></ChatView>{" "}
         </div>
       )}
     </div>

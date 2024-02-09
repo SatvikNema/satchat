@@ -2,6 +2,7 @@ package com.satvik.satchat.service;
 
 import com.satvik.satchat.config.UserDetailsImpl;
 import com.satvik.satchat.entity.UserEntity;
+import com.satvik.satchat.model.ChatMessage;
 import com.satvik.satchat.model.UserConnection;
 import com.satvik.satchat.model.UserResponse;
 import com.satvik.satchat.repository.UserRepository;

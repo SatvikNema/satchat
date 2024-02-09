@@ -5,39 +5,43 @@ class BackendClient {
     this.jwt = "";
   }
 
-  set jwt(token) {}
+  async getFriends() {
+    return this.sendRequest(`${BASE_URL}/api/conversation/friends`);
+  }
 
-  getFriends = async (username, jwt) => {
-    const url = `${BASE_URL}/${username}/friends`;
-    return this.sendRequest(
-      url,
-      {
-        method: "GET",
+  login = async (loginRequestPayload) => {
+    return this.sendRequest(LOGIN_URL, {
+      method: "POST",
+      body: JSON.stringify(loginRequestPayload),
+      headers: {
+        "content-type": "application/json",
       },
-      jwt
-    );
+    });
   };
 
-  login = async (loginRequestPayload, jwt) => {
-    return this.sendRequest(
-      LOGIN_URL,
-      {
-        method: "POST",
-        body: JSON.stringify(loginRequestPayload),
-        headers: {
-          "content-type": "application/json",
-        },
-      },
-      jwt
-    );
+  getUnseenMessages = async () => {
+    return this.sendRequest(`${BASE_URL}/api/conversation/unseenMessages`);
   };
 
-  sendRequest = async (url, apiConfigs, jwt) => {
+  setReadMessages = async (chatMessages) => {
+    return this.sendRequest(`${BASE_URL}/api/conversation/setReadMessages`, {
+      method: "PUT",
+      body: JSON.stringify(chatMessages),
+      headers: {
+        "content-type": "application/json",
+      },
+    });
+  };
+
+  sendRequest = async (url, apiConfigs) => {
+    if (!apiConfigs) {
+      apiConfigs = { method: "GET" };
+    }
     let { headers } = apiConfigs;
     if (!headers) {
       headers = {};
     }
-    headers["Authorization"] = `Bearer ${jwt}`;
+    headers["Authorization"] = `Bearer ${this.jwt}`;
     apiConfigs.headers = headers;
 
     const response = await fetch(url, apiConfigs);
