@@ -64,7 +64,7 @@ public class RestApiTokenFilter extends OncePerRequestFilter {
     private String parseJwt(HttpServletRequest request) {
         String jwt = null;
         String token = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if(token != null && !token.isEmpty()){
+        if(token != null && token.length() > 6){
             jwt = token.substring(7);
         }
         return jwt;

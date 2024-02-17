@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @RestController
 @CrossOrigin(origins = "*")
@@ -24,5 +26,11 @@ public class UserController {
     @PreAuthorize("hasAuthority('ADMIN')")
     List<UserResponse> getOnlineUsers(){
         return onlineOfflineService.getOnlineUsers();
+    }
+
+    @GetMapping("/subscriptions")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    Map<String, Set<String>> getSubscriptions(){
+        return onlineOfflineService.getUserSubscribed();
     }
 }

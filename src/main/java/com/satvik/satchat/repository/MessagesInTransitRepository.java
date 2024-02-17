@@ -12,6 +12,9 @@ import java.util.UUID;
 @Repository
 public interface MessagesInTransitRepository extends JpaRepository<MessagesInTransitEntity, UUID> {
 
-    @Query("select m from MessagesInTransitEntity m where m.toUser = :toUser and m.read = false")
-    List<MessagesInTransitEntity> findUnseenMessages(@Param("toUser") UUID toUser);
+    @Query("select m from MessagesInTransitEntity m where m.toUser = :toUser and m.read = false and m.fromUser = :fromUser")
+    List<MessagesInTransitEntity> findUnseenMessages(@Param("toUser") UUID toUser, @Param("fromUser") UUID fromUser);
+
+    @Query(value = "select from_user, count(1) as count from messages_in_transit where to_user = :toUser and read=false group by from_user", nativeQuery = true)
+    List<Object[]> findUnseenMessagesCount(@Param("toUser") UUID toUser);
 }

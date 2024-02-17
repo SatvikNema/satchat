@@ -7,6 +7,7 @@ import com.satvik.satchat.exception.EntityException;
 import com.satvik.satchat.mapper.ChatMessageMapper;
 import com.satvik.satchat.model.ChatMessage;
 import com.satvik.satchat.model.MessageType;
+import com.satvik.satchat.model.UnseenMessageCountResponse;
 import com.satvik.satchat.model.UserConnection;
 import com.satvik.satchat.repository.MessagesInTransitRepository;
 import com.satvik.satchat.repository.UserRepository;
@@ -58,12 +59,28 @@ public class ConversationService {
                 .toList();
     }
 
-    public List<ChatMessage> getUnseenMessages() {
-        List<ChatMessage> result = new ArrayList<>();
+    public List<UnseenMessageCountResponse> getUnseenMessages() {
+        List<UnseenMessageCountResponse> result = new ArrayList<>();
         UserDetailsImpl userDetails = securityUtils.getUser();
-        List<MessagesInTransitEntity> unseenMessages = messagesInTransitRepository.findUnseenMessages(userDetails.getId());
+        List<Object[]> unseenMessages = messagesInTransitRepository.findUnseenMessagesCount(userDetails.getId());
         if(!CollectionUtils.isEmpty(unseenMessages)) {
             log.info("there are some unseen messages for {}", userDetails.getUsername());
+//            result = chatMessageMapper.toChatMessages(unseenMessages, userDetails, MessageType.UNSEEN);
+            result = unseenMessages.stream().map(unseenMessage -> UnseenMessageCountResponse
+                    .builder()
+                    .count((Long) unseenMessage[1])
+                    .fromUser((UUID) unseenMessage[0])
+                    .build()).toList();
+        }
+        return result;
+    }
+
+    public List<ChatMessage> getUnseenMessages(UUID fromUserId) {
+        List<ChatMessage> result = new ArrayList<>();
+        UserDetailsImpl userDetails = securityUtils.getUser();
+        List<MessagesInTransitEntity> unseenMessages = messagesInTransitRepository.findUnseenMessages(userDetails.getId(), fromUserId);
+        if(!CollectionUtils.isEmpty(unseenMessages)) {
+            log.info("there are some unseen messages for {} from {}", userDetails.getUsername(), fromUserId);
             result = chatMessageMapper.toChatMessages(unseenMessages, userDetails, MessageType.UNSEEN);
         }
         return result;

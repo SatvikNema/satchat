@@ -2,12 +2,15 @@ package com.satvik.satchat.controller;
 
 import com.satvik.satchat.entity.MessagesInTransitEntity;
 import com.satvik.satchat.model.ChatMessage;
+import com.satvik.satchat.model.UnseenMessageCountResponse;
 import com.satvik.satchat.model.UserConnection;
 import com.satvik.satchat.service.ConversationService;
+import jakarta.websocket.server.PathParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @CrossOrigin("*")
@@ -27,8 +30,13 @@ public class ConversationController {
     }
 
     @GetMapping("/unseenMessages")
-    public List<ChatMessage> getUnseenMessages(){
+    public List<UnseenMessageCountResponse> getUnseenMessages(){
         return conversationService.getUnseenMessages();
+    }
+
+    @GetMapping("/unseenMessages/{fromUserId}")
+    public List<ChatMessage> getUnseenMessages(@PathVariable("fromUserId") UUID fromUserId){
+        return conversationService.getUnseenMessages(fromUserId);
     }
 
     @PutMapping("/setReadMessages")

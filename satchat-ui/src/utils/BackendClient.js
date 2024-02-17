@@ -19,8 +19,12 @@ class BackendClient {
     });
   };
 
-  getUnseenMessages = async () => {
-    return this.sendRequest(`${BASE_URL}/api/conversation/unseenMessages`);
+  getUnseenMessages = async (fromUserId) => {
+    let url = `${BASE_URL}/api/conversation/unseenMessages`;
+    if (fromUserId) {
+      url = url + `/${fromUserId}`;
+    }
+    return this.sendRequest(url);
   };
 
   setReadMessages = async (chatMessages) => {

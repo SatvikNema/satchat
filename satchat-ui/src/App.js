@@ -10,7 +10,6 @@ import SocketClient from "./socket/SocketClient";
 function App() {
   const [context, setContext] = useState({});
   const [socketClientContext, setSocketClientContext] = useState({});
-  const [unSeenMessages, setUnSeenMessages] = useState({});
 
   const loginUser = async ({ username }) => {
     const password = "password"; // todo load this from user input
@@ -26,15 +25,6 @@ function App() {
 
     const socketClient = new SocketClient(webSocketUrl, token);
     setSocketClientContext({ socketClient });
-
-    const apiUnseenMessages = await backendClient.getUnseenMessages();
-    if (apiUnseenMessages && apiUnseenMessages.length > 0) {
-      const grouped = Object.groupBy(
-        apiUnseenMessages,
-        ({ senderUsername }) => senderUsername
-      );
-      setUnSeenMessages(grouped);
-    }
   };
 
   return (
@@ -44,7 +34,7 @@ function App() {
           <div>
             Currently logged in: {context.username}
             <br />
-            <FriendView unSeenMessages={unSeenMessages} />
+            <FriendView />
           </div>
         ) : (
           <UserSelection onUserContextSet={loginUser} />

@@ -2,34 +2,47 @@ import React, { useContext, useState, useEffect } from "react";
 import TextInput from "./TextInput";
 import Button from "./Button";
 import SocketClientContext from "../context/SocketClientContext";
+import backendClient from "../utils/BackendClient";
 
-let subscription;
-const ChatView = ({ friend, unSeenMessages }) => {
+const ChatView = ({ friend }) => {
   const { connectionId, connectionUsername, convId } = friend;
   const obj = useContext(SocketClientContext);
   const { socketClient: client } = obj;
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState({});
   const [userMessage, setUserMessage] = useState("");
-  if (unSeenMessages && unSeenMessages.length > 0) {
-    console.log("wat");
-  }
+  const [unSeenMessages, setUnSeenMessages] = useState([]);
 
   useEffect(() => {
+    console.log("use effect! for " + connectionUsername);
+    let subscription;
     if (client && client.connected) {
-      if (subscription) {
-        subscription.unsubscribe();
-      }
       subscription = client
         .getClientInstance()
         .subscribe(`/topic/${convId}`, (message) => {
           setMessages((prev) => {
-            const newMessages = [...prev, JSON.parse(message.body)];
-            return newMessages;
+            const friendsMessages = prev[connectionId] || [];
+
+            const newMessages = [...friendsMessages, JSON.parse(message.body)];
+            const newObj = { ...prev, [connectionId]: newMessages };
+            return newObj;
           });
         });
-      console.log("subscribed to " + convId);
     }
-  }, []);
+
+    const getUnseenMessages = async () => {
+      const apiResponse = await backendClient.getUnseenMessages(connectionId);
+      setUnSeenMessages(apiResponse);
+      backendClient.setReadMessages(apiResponse);
+    };
+
+    getUnseenMessages();
+
+    return () => {
+      if (subscription) {
+        subscription.unsubscribe();
+      }
+    };
+  }, [connectionId]);
 
   const onInputChange = (e) => {
     setUserMessage(e.target.value);
@@ -50,7 +63,7 @@ const ChatView = ({ friend, unSeenMessages }) => {
 
   return (
     <div>
-      ChatView
+      <div>Chatting with {connectionUsername}</div>
       {unSeenMessages && unSeenMessages.length > 0 && (
         // <div>There are some unseen messages</div>
         <div>
@@ -65,8 +78,9 @@ const ChatView = ({ friend, unSeenMessages }) => {
           =======
         </div>
       )}
-      {messages.length > 0 &&
-        messages
+      {messages[connectionId] &&
+        messages[connectionId].length > 0 &&
+        messages[connectionId]
           .filter((message) => message.messageType == "CHAT")
           .map((message, idx) => {
             return (

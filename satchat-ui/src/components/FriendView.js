@@ -3,21 +3,37 @@ import Button from "./Button";
 import ChatView from "./ChatView";
 import backendClient from "../utils/BackendClient";
 
-const FriendView = ({ unSeenMessages }) => {
+const FriendView = () => {
   const [friendList, setFriendList] = useState([]);
   const [selectedFriend, setSelectedFriend] = useState(null);
-  const [friendUnSeenMessages, setFriendUnSeenMessages] = useState([]);
 
-  const handleSelectedFriend = (friend, apiFriendUnSeenMessages) => {
+  const handleSelectedFriend = (friend) => {
     setSelectedFriend(friend);
-    setFriendUnSeenMessages(apiFriendUnSeenMessages);
-
-    backendClient.setReadMessages(apiFriendUnSeenMessages);
+    setFriendList((prev) => {
+      for (let d of prev) {
+        if (d.connectionId == friend.connectionId) {
+          d.unSeen = 0;
+        }
+      }
+      return [...prev];
+    });
   };
 
   useEffect(() => {
     const loadFriends = async () => {
+      console.log("call made to get friends");
       const data = await backendClient.getFriends();
+      const apiResponse = await backendClient.getUnseenMessages();
+      if (apiResponse && apiResponse.length > 0) {
+        apiResponse.forEach((r) => {
+          data.filter((data) => data.connectionId == r.fromUser);
+          for (let d of data) {
+            if (d.connectionId == r.fromUser) {
+              d.unSeen = r.count;
+            }
+          }
+        });
+      }
       setFriendList(data);
     };
 
@@ -29,18 +45,14 @@ const FriendView = ({ unSeenMessages }) => {
       FriendView
       {friendList.length > 0 &&
         friendList.map((friend, idx) => {
-          const connectionUsername = friend.connectionUsername;
-          let displayText = `Chat with ${connectionUsername}`;
-          let apiFriendUnSeenMessages = [];
-          if (connectionUsername in unSeenMessages) {
-            apiFriendUnSeenMessages = unSeenMessages[connectionUsername];
-            displayText += ` (${apiFriendUnSeenMessages.length})`;
-          }
+          let count =
+            friend.unSeen && friend.unSeen > 0 ? `(${friend.unSeen})` : "";
+          let displayText = `Chat with ${friend.connectionUsername} ${count}`;
           return (
             <div key={idx}>
               <Button
                 onClick={() => {
-                  handleSelectedFriend(friend, apiFriendUnSeenMessages);
+                  handleSelectedFriend(friend);
                 }}
                 displayText={displayText}
               />
@@ -50,10 +62,7 @@ const FriendView = ({ unSeenMessages }) => {
       {selectedFriend && (
         <div>
           <br />
-          <ChatView
-            friend={selectedFriend}
-            unSeenMessages={friendUnSeenMessages}
-          ></ChatView>{" "}
+          <ChatView friend={selectedFriend}></ChatView>{" "}
         </div>
       )}
     </div>

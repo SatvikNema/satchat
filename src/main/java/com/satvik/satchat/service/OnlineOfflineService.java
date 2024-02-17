@@ -11,9 +11,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
@@ -22,11 +20,15 @@ import java.util.concurrent.ConcurrentSkipListSet;
 public class OnlineOfflineService {
     private final Set<String> onlineUsers;
 
+    private final Map<String, Set<String>> userSubscribed;
+
     private final UserRepository userRepository;
 
     public OnlineOfflineService(UserRepository userRepository){
         this.onlineUsers = new ConcurrentSkipListSet<>();
+        this.userSubscribed = new ConcurrentHashMap<>();
         this.userRepository = userRepository;
+
     }
     public void addOnlineUser(Principal user) {
         if(user!=null) {
@@ -63,5 +65,30 @@ public class OnlineOfflineService {
                 .stream()
                 .map(userEntity -> new UserResponse(userEntity.getId(), userEntity.getUsername(), userEntity.getEmail()))
                 .toList();
+    }
+
+    public void addUserSubscribed(Principal user, String subscribedChannel) {
+        UserDetailsImpl userDetails = getUserDetails(user);
+        log.info("{} subscribed to {}", userDetails.getUsername(), subscribedChannel);
+        Set<String> subscriptions = userSubscribed.getOrDefault(userDetails.getUsername(), new HashSet<>());
+        subscriptions.add(subscribedChannel);
+        userSubscribed.put(userDetails.getUsername(), subscriptions);
+    }
+
+    public void removeUserSubscribed(Principal user, String subscribedChannel) {
+        UserDetailsImpl userDetails = getUserDetails(user);
+        log.info("unsubscription! {} unsubscribed {}", userDetails.getUsername(), subscribedChannel);
+        Set<String> subscriptions = userSubscribed.getOrDefault(userDetails.getUsername(), new HashSet<>());
+        subscriptions.remove(subscribedChannel);
+        userSubscribed.put(userDetails.getUsername(), subscriptions);
+    }
+
+    public boolean isUserSubscribed(String username, String subscription){
+        Set<String> subscriptions = userSubscribed.getOrDefault(username, new HashSet<>());
+        return subscriptions.contains(subscription);
+    }
+
+    public Map<String, Set<String>> getUserSubscribed(){
+        return userSubscribed;
     }
 }

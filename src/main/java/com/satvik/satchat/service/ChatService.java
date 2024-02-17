@@ -54,11 +54,13 @@ public class ChatService {
         String sessionId = headerAccessor.getSessionId();
         log.info("{} for conv id {} for session id: {}", chatMessage.toString(), conversationId, sessionId);
         String targetUsername = chatMessage.getReceiverUsername();
-        boolean isTargetOnline = onlineOfflineService.isOnline(targetUsername);
+
         UserDetailsImpl userDetails = getUser();
         UUID fromUserId = userDetails.getId();
         UUID toUserId = chatMessage.getReceiverId();
         populateContext(chatMessage, userDetails);
+        boolean isTargetOnline = onlineOfflineService.isOnline(targetUsername);
+        boolean isTargetSubscribed = onlineOfflineService.isUserSubscribed(targetUsername, "/topic/"+conversationId);
 
         if(!isTargetOnline){
             MessagesInTransitEntity messagesInTransitEntity = MessagesInTransitEntity
@@ -74,6 +76,21 @@ public class ChatService {
                     .build();
             messagesInTransitRepository.save(messagesInTransitEntity);
             log.info("{} is not online. Content saved in unseen messages", chatMessage.getReceiverUsername());
+        } else if(!isTargetSubscribed){
+            log.info("{} is online but not subscribed. sending to their private subscription", chatMessage.getReceiverUsername());
+            MessagesInTransitEntity messagesInTransitEntity = MessagesInTransitEntity
+                    .builder()
+                    .id(UUID.randomUUID())
+                    .read(false)
+                    .time(Timestamp.from(Instant.now()))
+                    .fromUser(fromUserId)
+                    .toUser(toUserId)
+                    .senderNotified(false)
+                    .content(chatMessage.getContent())
+                    .convId(conversationId)
+                    .build();
+            messagesInTransitRepository.save(messagesInTransitEntity);
+            simpMessageSendingOperations.convertAndSend("/topic/" + toUserId.toString(), chatMessage);
         }
         ConversationEntity conversationEntity = ConversationEntity
                 .builder()
@@ -89,19 +106,6 @@ public class ChatService {
     private void populateContext(ChatMessage chatMessage, UserDetailsImpl userDetails) {
         chatMessage.setSenderUsername(userDetails.getUsername());
         chatMessage.setSenderId(userDetails.getId());
-    }
-
-    public List<MessagesInTransitEntity> getUnseenMessages(Principal user, String subscribedChannel) {
-        UserDetailsImpl userDetails = getUserDetails(user);
-        List<MessagesInTransitEntity> unseenMessages = messagesInTransitRepository.findUnseenMessages(userDetails.getId());
-
-        return unseenMessages;
-    }
-
-    private UserDetailsImpl getUserDetails(Principal principal){
-        UsernamePasswordAuthenticationToken user = (UsernamePasswordAuthenticationToken) principal;
-        Object object = user.getPrincipal();
-        return (UserDetailsImpl) object;
     }
 
     public UserDetailsImpl getUser(){
