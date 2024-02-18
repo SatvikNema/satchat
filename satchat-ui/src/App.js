@@ -13,18 +13,17 @@ function App() {
 
   const loginUser = async ({ username }) => {
     const password = "password"; // todo load this from user input
-    // login user and get the jwt
-
     const jsonPayload = await backendClient.login({
       username,
       password,
     });
     const { id, username: responseUsername, email, token } = jsonPayload;
     backendClient.jwt = token;
-    setContext({ id, username: responseUsername, email, token });
 
     const socketClient = new SocketClient(webSocketUrl, token);
+    await socketClient.awaitConnect();
     setSocketClientContext({ socketClient });
+    setContext({ id, username: responseUsername, email, token });
   };
 
   return (

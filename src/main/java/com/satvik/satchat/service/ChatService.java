@@ -38,18 +38,14 @@ public class ChatService {
 
     private final OnlineOfflineService onlineOfflineService;
 
-    private final UserService userService;
-    private final UserRepository userRepository;
-
     @Autowired
-    public ChatService(SimpMessageSendingOperations simpMessageSendingOperations, MessagesInTransitRepository messagesInTransitRepository, ConversationRepository conversationRepository, OnlineOfflineService onlineOfflineService, UserService userService, UserRepository userRepository){
+    public ChatService(SimpMessageSendingOperations simpMessageSendingOperations, MessagesInTransitRepository messagesInTransitRepository, ConversationRepository conversationRepository, OnlineOfflineService onlineOfflineService){
         this.simpMessageSendingOperations = simpMessageSendingOperations;
         this.messagesInTransitRepository = messagesInTransitRepository;
         this.conversationRepository = conversationRepository;
         this.onlineOfflineService = onlineOfflineService;
-        this.userService = userService;
-        this.userRepository = userRepository;
     }
+
     public void sendMessageToConvId(ChatMessage chatMessage, String conversationId, SimpMessageHeaderAccessor headerAccessor) {
         String sessionId = headerAccessor.getSessionId();
         log.info("{} for conv id {} for session id: {}", chatMessage.toString(), conversationId, sessionId);
@@ -61,11 +57,12 @@ public class ChatService {
         populateContext(chatMessage, userDetails);
         boolean isTargetOnline = onlineOfflineService.isOnline(targetUsername);
         boolean isTargetSubscribed = onlineOfflineService.isUserSubscribed(targetUsername, "/topic/"+conversationId);
+        chatMessage.setId(UUID.randomUUID());
 
-        if(!isTargetOnline){
+        if(!isTargetOnline || !isTargetSubscribed){
             MessagesInTransitEntity messagesInTransitEntity = MessagesInTransitEntity
                     .builder()
-                    .id(UUID.randomUUID())
+                    .id(chatMessage.getId())
                     .read(false)
                     .time(Timestamp.from(Instant.now()))
                     .fromUser(fromUserId)
@@ -75,31 +72,22 @@ public class ChatService {
                     .convId(conversationId)
                     .build();
             messagesInTransitRepository.save(messagesInTransitEntity);
-            log.info("{} is not online. Content saved in unseen messages", chatMessage.getReceiverUsername());
-        } else if(!isTargetSubscribed){
-            log.info("{} is online but not subscribed. sending to their private subscription", chatMessage.getReceiverUsername());
-            MessagesInTransitEntity messagesInTransitEntity = MessagesInTransitEntity
+            if(!isTargetOnline) {
+                log.info("{} is not online. Content saved in unseen messages", chatMessage.getReceiverUsername());
+            } else {
+                log.info("{} is online but not subscribed. sending to their private subscription", chatMessage.getReceiverUsername());
+                simpMessageSendingOperations.convertAndSend("/topic/" + toUserId.toString(), chatMessage);
+            }
+        } else {
+            ConversationEntity conversationEntity = ConversationEntity
                     .builder()
-                    .id(UUID.randomUUID())
-                    .read(false)
-                    .time(Timestamp.from(Instant.now()))
+                    .content(chatMessage.getContent())
                     .fromUser(fromUserId)
                     .toUser(toUserId)
-                    .senderNotified(false)
-                    .content(chatMessage.getContent())
-                    .convId(conversationId)
+                    .id(chatMessage.getId())
                     .build();
-            messagesInTransitRepository.save(messagesInTransitEntity);
-            simpMessageSendingOperations.convertAndSend("/topic/" + toUserId.toString(), chatMessage);
+            conversationRepository.save(conversationEntity);
         }
-        ConversationEntity conversationEntity = ConversationEntity
-                .builder()
-                .content(chatMessage.getContent())
-                .fromUser(fromUserId)
-                .toUser(toUserId)
-                .id(UUID.randomUUID())
-                .build();
-        conversationRepository.save(conversationEntity);
         simpMessageSendingOperations.convertAndSend("/topic/" + conversationId, chatMessage);
     }
 
@@ -111,9 +99,5 @@ public class ChatService {
     public UserDetailsImpl getUser(){
         Object object = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return (UserDetailsImpl) object;
-    }
-
-    public void markSeen(List<MessagesInTransitEntity> unseenMessages) {
-        // todo impl
     }
 }

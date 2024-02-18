@@ -31,6 +31,7 @@ const UserSelection = ({ onUserContextSet }) => {
   const [username, setUserName] = useState(
     dropdownConfig.dropdownValues[0].displayText
   );
+
   return (
     <div>
       UserSelection

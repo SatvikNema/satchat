@@ -1,6 +1,7 @@
 package com.satvik.satchat.service;
 
 import com.satvik.satchat.config.UserDetailsImpl;
+import com.satvik.satchat.entity.ConversationEntity;
 import com.satvik.satchat.entity.MessagesInTransitEntity;
 import com.satvik.satchat.entity.UserEntity;
 import com.satvik.satchat.exception.EntityException;
@@ -9,6 +10,7 @@ import com.satvik.satchat.model.ChatMessage;
 import com.satvik.satchat.model.MessageType;
 import com.satvik.satchat.model.UnseenMessageCountResponse;
 import com.satvik.satchat.model.UserConnection;
+import com.satvik.satchat.repository.ConversationRepository;
 import com.satvik.satchat.repository.MessagesInTransitRepository;
 import com.satvik.satchat.repository.UserRepository;
 import com.satvik.satchat.utils.SecurityUtils;
@@ -31,11 +33,14 @@ public class ConversationService {
     private final ChatMessageMapper chatMessageMapper;
 
     private final MessagesInTransitRepository messagesInTransitRepository;
-    public ConversationService(UserRepository userRepository, SecurityUtils securityUtils, MessagesInTransitRepository messagesInTransitRepository, ChatMessageMapper chatMessageMapper){
+
+    private final ConversationRepository conversationRepository;
+    public ConversationService(UserRepository userRepository, SecurityUtils securityUtils, MessagesInTransitRepository messagesInTransitRepository, ChatMessageMapper chatMessageMapper, ConversationRepository conversationRepository){
         this.userRepository = userRepository;
         this.securityUtils = securityUtils;
         this.messagesInTransitRepository = messagesInTransitRepository;
         this.chatMessageMapper = chatMessageMapper;
+        this.conversationRepository = conversationRepository;
     }
 
     public List<UserConnection> getUserFriends() {
@@ -94,6 +99,19 @@ public class ConversationService {
         List<MessagesInTransitEntity> messagesInTransitEntities = messagesInTransitRepository.findAllById(inTransitMessageIds);
         messagesInTransitEntities.forEach(message -> message.setRead(true));
         List<MessagesInTransitEntity> saved = messagesInTransitRepository.saveAll(messagesInTransitEntities);
+
+        List<ConversationEntity> conversationEntities = chatMessages
+                .stream()
+                .map(chatMessage -> ConversationEntity
+                .builder()
+                .content(chatMessage.getContent())
+                .fromUser(chatMessage.getSenderId())
+                .toUser(chatMessage.getReceiverId())
+                .id(UUID.randomUUID())
+                .build())
+                .toList();
+        conversationRepository.saveAll(conversationEntities);
+
         return chatMessageMapper.toChatMessages(saved, securityUtils.getUser(), MessageType.CHAT);
     }
 }

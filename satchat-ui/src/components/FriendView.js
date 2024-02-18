@@ -1,11 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import Button from "./Button";
 import ChatView from "./ChatView";
 import backendClient from "../utils/BackendClient";
+import SocketClientContext from "../context/SocketClientContext";
+import UserContext from "../context/UserContext";
 
 const FriendView = () => {
   const [friendList, setFriendList] = useState([]);
   const [selectedFriend, setSelectedFriend] = useState(null);
+  const { id: userId, username } = useContext(UserContext);
+  const { socketClient } = useContext(SocketClientContext);
 
   const handleSelectedFriend = (friend) => {
     setSelectedFriend(friend);
@@ -20,13 +24,15 @@ const FriendView = () => {
   };
 
   useEffect(() => {
+    let data = [];
     const loadFriends = async () => {
-      console.log("call made to get friends");
-      const data = await backendClient.getFriends();
+      data = await backendClient.getFriends();
+      for (let d of data) {
+        d.unSeen = 0;
+      }
       const apiResponse = await backendClient.getUnseenMessages();
       if (apiResponse && apiResponse.length > 0) {
         apiResponse.forEach((r) => {
-          data.filter((data) => data.connectionId == r.fromUser);
           for (let d of data) {
             if (d.connectionId == r.fromUser) {
               d.unSeen = r.count;
@@ -34,10 +40,32 @@ const FriendView = () => {
           }
         });
       }
+
       setFriendList(data);
     };
 
     loadFriends();
+
+    let subscription = socketClient
+      .getClientInstance()
+      .subscribe(`/topic/${userId}`, (message) => {
+        console.log(message);
+        const { senderId } = JSON.parse(message.body);
+        setFriendList((prev) => {
+          for (let d of prev) {
+            if (d.connectionId == senderId) {
+              d.unSeen += 1;
+            }
+          }
+          return [...prev];
+        });
+      });
+
+    return () => {
+      if (subscription) {
+        subscription.unsubscribe();
+      }
+    };
   }, []);
 
   return (

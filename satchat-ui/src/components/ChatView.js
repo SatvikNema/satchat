@@ -10,28 +10,29 @@ const ChatView = ({ friend }) => {
   const { socketClient: client } = obj;
   const [messages, setMessages] = useState({});
   const [userMessage, setUserMessage] = useState("");
-  const [unSeenMessages, setUnSeenMessages] = useState([]);
 
   useEffect(() => {
-    console.log("use effect! for " + connectionUsername);
-    let subscription;
-    if (client && client.connected) {
-      subscription = client
-        .getClientInstance()
-        .subscribe(`/topic/${convId}`, (message) => {
-          setMessages((prev) => {
-            const friendsMessages = prev[connectionId] || [];
+    let subscription = client
+      .getClientInstance()
+      .subscribe(`/topic/${convId}`, (message) => {
+        setMessages((prev) => {
+          const friendsMessages = prev[connectionId] || [];
 
-            const newMessages = [...friendsMessages, JSON.parse(message.body)];
-            const newObj = { ...prev, [connectionId]: newMessages };
-            return newObj;
-          });
+          const newMessages = [...friendsMessages, JSON.parse(message.body)];
+          const newObj = { ...prev, [connectionId]: newMessages };
+          return newObj;
         });
-    }
+      });
 
     const getUnseenMessages = async () => {
       const apiResponse = await backendClient.getUnseenMessages(connectionId);
-      setUnSeenMessages(apiResponse);
+      setMessages((prev) => {
+        const friendsMessages = prev[connectionId] || [];
+
+        const newMessages = [...friendsMessages, ...apiResponse];
+        const newObj = { ...prev, [connectionId]: newMessages };
+        return newObj;
+      });
       backendClient.setReadMessages(apiResponse);
     };
 
@@ -64,31 +65,24 @@ const ChatView = ({ friend }) => {
   return (
     <div>
       <div>Chatting with {connectionUsername}</div>
-      {unSeenMessages && unSeenMessages.length > 0 && (
-        // <div>There are some unseen messages</div>
-        <div>
-          unseen =======
-          {unSeenMessages.map((message, idx) => {
-            return (
-              <div key={idx}>
-                {message.senderUsername}: {message.content}
-              </div>
-            );
-          })}
-          =======
-        </div>
-      )}
       {messages[connectionId] &&
         messages[connectionId].length > 0 &&
-        messages[connectionId]
-          .filter((message) => message.messageType == "CHAT")
-          .map((message, idx) => {
+        messages[connectionId].map((message, idx) => {
+          if (message.messageType == "CHAT") {
             return (
               <div key={idx}>
                 {message.senderUsername}: {message.content}
               </div>
             );
-          })}
+          } else {
+            return (
+              <div key={idx}>
+                {message.senderUsername}: (new) {message.content}
+              </div>
+            );
+          }
+        })}
+
       <TextInput
         id="userMessage"
         labelText="User Message"

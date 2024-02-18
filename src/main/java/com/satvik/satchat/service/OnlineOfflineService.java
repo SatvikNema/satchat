@@ -44,6 +44,7 @@ public class OnlineOfflineService {
             UserDetailsImpl userDetails = getUserDetails(user);
             log.info("{} went offline", userDetails.getUsername());
             onlineUsers.remove(userDetails.getUsername());
+            userSubscribed.remove(userDetails.getUsername());
 
             // todo broadcast to all oneline friends of 'user' that it has went offline
         }
@@ -87,7 +88,6 @@ public class OnlineOfflineService {
         Set<String> subscriptions = userSubscribed.getOrDefault(username, new HashSet<>());
         return subscriptions.contains(subscription);
     }
-
     public Map<String, Set<String>> getUserSubscribed(){
         return userSubscribed;
     }

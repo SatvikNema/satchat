@@ -62,7 +62,6 @@ public class WebSocketEventListener {
             log.error("SUBSCRIBED TO NULL?? WAT?!");
             return;
         }
-        log.info("subscription called for {} sessionId: {}", subscribedChannel, simpSessionId);
         simpSessionIdToSubscriptionId.put(simpSessionId, subscribedChannel);
         onlineOfflineService.addUserSubscribed(sessionSubscribeEvent.getUser(), subscribedChannel);
     }
@@ -71,7 +70,6 @@ public class WebSocketEventListener {
     public void handleUnSubscribeEvent(SessionUnsubscribeEvent unsubscribeEvent){
         String simpSessionId = (String) unsubscribeEvent.getMessage().getHeaders().get("simpSessionId");
         String unSubscribedChannel = simpSessionIdToSubscriptionId.get(simpSessionId);
-        log.info("{} id mapped to subscription {}", simpSessionId, unSubscribedChannel);
         onlineOfflineService.removeUserSubscribed(unsubscribeEvent.getUser(), unSubscribedChannel);
     }
 
