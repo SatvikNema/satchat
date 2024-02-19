@@ -31,19 +31,11 @@ import java.util.stream.Collectors;
 public class WebSocketEventListener {
 
     private final OnlineOfflineService onlineOfflineService;
-    private final SimpMessageSendingOperations simpMessageSendingOperations;
-
-    private final ChatService chatService;
-
-    private final UserRepository userRepository;
 
     private final Map<String, String> simpSessionIdToSubscriptionId;
 
-    public WebSocketEventListener(OnlineOfflineService onlineOfflineService, SimpMessageSendingOperations simpMessageSendingOperations, ChatService chatService, UserRepository userRepository){
+    public WebSocketEventListener(OnlineOfflineService onlineOfflineService){
         this.onlineOfflineService = onlineOfflineService;
-        this.simpMessageSendingOperations = simpMessageSendingOperations;
-        this.chatService = chatService;
-        this.userRepository = userRepository;
         this.simpSessionIdToSubscriptionId = new ConcurrentHashMap<>();
     }
 
@@ -71,12 +63,6 @@ public class WebSocketEventListener {
         String simpSessionId = (String) unsubscribeEvent.getMessage().getHeaders().get("simpSessionId");
         String unSubscribedChannel = simpSessionIdToSubscriptionId.get(simpSessionId);
         onlineOfflineService.removeUserSubscribed(unsubscribeEvent.getUser(), unSubscribedChannel);
-    }
-
-    private UserDetailsImpl getUserDetails(Principal principal){
-        UsernamePasswordAuthenticationToken user = (UsernamePasswordAuthenticationToken) principal;
-        Object object = user.getPrincipal();
-        return (UserDetailsImpl) object;
     }
 
     @EventListener
