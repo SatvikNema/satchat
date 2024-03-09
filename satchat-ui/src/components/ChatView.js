@@ -12,17 +12,15 @@ const ChatView = ({ friend }) => {
   const [userMessage, setUserMessage] = useState("");
 
   useEffect(() => {
-    let subscription = client
-      .getClientInstance()
-      .subscribe(`/topic/${convId}`, (message) => {
-        setMessages((prev) => {
-          const friendsMessages = prev[connectionId] || [];
+    let subscription = client.subscribe(`/topic/${convId}`, (message) => {
+      setMessages((prev) => {
+        const friendsMessages = prev[connectionId] || [];
 
-          const newMessages = [...friendsMessages, JSON.parse(message.body)];
-          const newObj = { ...prev, [connectionId]: newMessages };
-          return newObj;
-        });
+        const newMessages = [...friendsMessages, JSON.parse(message.body)];
+        const newObj = { ...prev, [connectionId]: newMessages };
+        return newObj;
       });
+    });
 
     const getUnseenMessages = async () => {
       const apiResponse = await backendClient.getUnseenMessages(connectionId);

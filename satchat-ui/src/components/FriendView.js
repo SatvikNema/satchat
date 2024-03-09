@@ -46,20 +46,18 @@ const FriendView = () => {
 
     loadFriends();
 
-    let subscription = socketClient
-      .getClientInstance()
-      .subscribe(`/topic/${userId}`, (message) => {
-        console.log(message);
-        const { senderId } = JSON.parse(message.body);
-        setFriendList((prev) => {
-          for (let d of prev) {
-            if (d.connectionId == senderId) {
-              d.unSeen += 1;
-            }
+    let subscription = socketClient.subscribe(`/topic/${userId}`, (message) => {
+      console.log(message);
+      const { senderId } = JSON.parse(message.body);
+      setFriendList((prev) => {
+        for (let d of prev) {
+          if (d.connectionId == senderId) {
+            d.unSeen += 1;
           }
-          return [...prev];
-        });
+        }
+        return [...prev];
       });
+    });
 
     return () => {
       if (subscription) {

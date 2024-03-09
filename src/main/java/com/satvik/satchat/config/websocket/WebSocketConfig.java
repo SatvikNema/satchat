@@ -1,6 +1,7 @@
 package com.satvik.satchat.config.websocket;
 
 import com.satvik.satchat.filter.WebSocketTokenFilter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
@@ -19,6 +20,9 @@ import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
 @Order(Ordered.HIGHEST_PRECEDENCE + 1)
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
+  @Value("${frontend.caller.host:http://localhost:3000}")
+  private String frontendCallerHost;
+
   private final WebSocketTokenFilter webSocketTokenFilter;
 
   public WebSocketConfig(WebSocketTokenFilter webSocketTokenFilter) {
@@ -36,7 +40,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     registry
         .addEndpoint("/ws")
         .setHandshakeHandler(new DefaultHandshakeHandler(upgradeStrategy))
-        .setAllowedOrigins("*");
+        .setAllowedOrigins(frontendCallerHost);
   }
 
   @Override

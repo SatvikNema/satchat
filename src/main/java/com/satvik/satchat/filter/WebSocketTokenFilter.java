@@ -28,7 +28,7 @@ public class WebSocketTokenFilter implements ChannelInterceptor {
         MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
     if (StompCommand.CONNECT == accessor.getCommand()) {
 
-      String jwt = parseJwt(accessor);
+      String jwt = jwtUtils.parseJwt(accessor);
       if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
         String username = jwtUtils.getUserNameFromJwtToken(jwt);
 
@@ -40,14 +40,5 @@ public class WebSocketTokenFilter implements ChannelInterceptor {
       }
     }
     return message;
-  }
-
-  private String parseJwt(StompHeaderAccessor accessor) {
-    String token = accessor.getFirstNativeHeader("Authorization");
-    String jwt = null;
-    if (token != null) {
-      jwt = token.substring(7);
-    }
-    return jwt;
   }
 }

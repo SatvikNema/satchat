@@ -21,19 +21,6 @@ public class ChatController {
     this.chatService = chatService;
   }
 
-  //    @MessageMapping("/chat.sendMessage")
-  //    public ChatMessage sendMessage(@Payload ChatMessage chatMessage){
-  //        log.info("message recieved: {}", chatMessage.toString());
-  //        simpMessageSendingOperations.convertAndSend("/topic/public", chatMessage);
-  //        return chatMessage;
-  //    }
-  //
-  //    @MessageMapping("/chat.addUser")
-  //    public ChatMessage addUser(@Payload ChatMessage chatMessage){
-  //        simpMessageSendingOperations.convertAndSend("/topic/public", chatMessage);
-  //        return chatMessage;
-  //    }
-
   @MessageMapping("/chat/sendMessage/{convId}")
   public ChatMessage sendMessageToConvId(
       @Payload ChatMessage chatMessage,

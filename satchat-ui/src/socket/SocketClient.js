@@ -1,28 +1,21 @@
 import { Client } from "@stomp/stompjs";
-import { webSocketUrl } from "../utils/GeneralConstants";
-let instance = null;
-
 class SocketClient {
   constructor(url, jwt) {
-    if (!instance) {
-      this.url = url;
-      this.jwt = jwt;
-      this.client = new Client();
+    this.url = url;
+    this.jwt = jwt;
+    this.client = new Client();
 
-      this.client.configure({
-        brokerURL: url,
-        connectHeaders: {
-          Authorization: `Bearer ${jwt}`,
-        },
-        onConnect: () => {
-          console.log("connected!");
-        },
-      });
+    this.client.configure({
+      brokerURL: url,
+      connectHeaders: {
+        Authorization: `Bearer ${jwt}`,
+      },
+      onConnect: () => {
+        console.log("connected!");
+      },
+    });
 
-      this.client.activate();
-
-      instance = this;
-    }
+    this.client.activate();
   }
 
   publish = ({ destination, body }) => {
@@ -35,8 +28,6 @@ class SocketClient {
   deactivate = () => {
     this.client.deactivate();
   };
-
-  getClientInstance = () => this.client;
 
   subscribe = (topic, callback) => {
     this.client.subscribe(topic, (message) => {

@@ -8,6 +8,7 @@ import java.security.Key;
 import java.util.Date;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
@@ -56,5 +57,14 @@ public class JWTUtils {
     }
 
     return false;
+  }
+
+  public String parseJwt(StompHeaderAccessor accessor) {
+    String token = accessor.getFirstNativeHeader("Authorization");
+    String jwt = null;
+    if (token != null) {
+      jwt = token.substring(7);
+    }
+    return jwt;
   }
 }

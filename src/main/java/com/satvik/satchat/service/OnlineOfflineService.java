@@ -4,7 +4,10 @@ import com.satvik.satchat.config.UserDetailsImpl;
 import com.satvik.satchat.model.UserResponse;
 import com.satvik.satchat.repository.UserRepository;
 import java.security.Principal;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +34,7 @@ public class OnlineOfflineService {
       UserDetailsImpl userDetails = getUserDetails(user);
       log.info("{} is online", userDetails.getUsername());
       onlineUsers.add(userDetails.getUsername());
-      // todo broadcast to all oneline friends of 'user' that it has come online
+      // todo broadcast to all online friends of 'user' that it has come online
     }
   }
 
@@ -42,11 +45,11 @@ public class OnlineOfflineService {
       onlineUsers.remove(userDetails.getUsername());
       userSubscribed.remove(userDetails.getUsername());
 
-      // todo broadcast to all oneline friends of 'user' that it has went offline
+      // todo broadcast to all online friends of 'user' that it has went offline
     }
   }
 
-  public boolean isOnline(String username) {
+  public boolean isUserOnline(String username) {
     return onlineUsers.contains(username);
   }
 
