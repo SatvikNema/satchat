@@ -1,21 +1,18 @@
 package com.satvik.satchat.repository;
 
 import com.satvik.satchat.entity.UserEntity;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-
 import java.util.*;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public interface UserRepository extends JpaRepository<UserEntity, UUID> {
 
-    Optional<UserEntity> findByUsername(String username);
+  Optional<UserEntity> findByUsername(String username);
 
-    Boolean existsByUsername(String username);
+  Boolean existsByUsername(String username);
 
-    Boolean existsByEmail(String email);
+  Boolean existsByEmail(String email);
 
-    List<UserEntity> findAllByUsernameIn(Set<String> usernames);
+  List<UserEntity> findAllByUsernameIn(Set<String> usernames);
 }

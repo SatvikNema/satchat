@@ -8,36 +8,38 @@ import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
-import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Controller;
 
 @Controller
 @Slf4j
 public class ChatController {
 
-    private final ChatService chatService;
+  private final ChatService chatService;
 
-    @Autowired
-    public ChatController(ChatService chatService){
-        this.chatService = chatService;
-    }
+  @Autowired
+  public ChatController(ChatService chatService) {
+    this.chatService = chatService;
+  }
 
-//    @MessageMapping("/chat.sendMessage")
-//    public ChatMessage sendMessage(@Payload ChatMessage chatMessage){
-//        log.info("message recieved: {}", chatMessage.toString());
-//        simpMessageSendingOperations.convertAndSend("/topic/public", chatMessage);
-//        return chatMessage;
-//    }
-//
-//    @MessageMapping("/chat.addUser")
-//    public ChatMessage addUser(@Payload ChatMessage chatMessage){
-//        simpMessageSendingOperations.convertAndSend("/topic/public", chatMessage);
-//        return chatMessage;
-//    }
+  //    @MessageMapping("/chat.sendMessage")
+  //    public ChatMessage sendMessage(@Payload ChatMessage chatMessage){
+  //        log.info("message recieved: {}", chatMessage.toString());
+  //        simpMessageSendingOperations.convertAndSend("/topic/public", chatMessage);
+  //        return chatMessage;
+  //    }
+  //
+  //    @MessageMapping("/chat.addUser")
+  //    public ChatMessage addUser(@Payload ChatMessage chatMessage){
+  //        simpMessageSendingOperations.convertAndSend("/topic/public", chatMessage);
+  //        return chatMessage;
+  //    }
 
-    @MessageMapping("/chat/sendMessage/{convId}")
-    public ChatMessage sendMessageToConvId(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor, @DestinationVariable("convId") String conversationId){
-        chatService.sendMessageToConvId(chatMessage, conversationId, headerAccessor);
-        return chatMessage;
-    }
+  @MessageMapping("/chat/sendMessage/{convId}")
+  public ChatMessage sendMessageToConvId(
+      @Payload ChatMessage chatMessage,
+      SimpMessageHeaderAccessor headerAccessor,
+      @DestinationVariable("convId") String conversationId) {
+    chatService.sendMessageToConvId(chatMessage, conversationId, headerAccessor);
+    return chatMessage;
+  }
 }

@@ -22,54 +22,58 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final UserDetailsServiceImpl userDetailsService;
+  private final UserDetailsServiceImpl userDetailsService;
 
-    private final AuthEntryPointJwt authEntryPointJwt;
+  private final AuthEntryPointJwt authEntryPointJwt;
 
-    private final RestApiTokenFilter restApiTokenFilter;
+  private final RestApiTokenFilter restApiTokenFilter;
 
-    public SecurityConfig(UserDetailsServiceImpl userDetailsService, AuthEntryPointJwt authEntryPointJwt, RestApiTokenFilter restApiTokenFilter){
-        this.userDetailsService = userDetailsService;
-        this.authEntryPointJwt = authEntryPointJwt;
-        this.restApiTokenFilter = restApiTokenFilter;
-    }
+  public SecurityConfig(
+      UserDetailsServiceImpl userDetailsService,
+      AuthEntryPointJwt authEntryPointJwt,
+      RestApiTokenFilter restApiTokenFilter) {
+    this.userDetailsService = userDetailsService;
+    this.authEntryPointJwt = authEntryPointJwt;
+    this.restApiTokenFilter = restApiTokenFilter;
+  }
 
-    @Bean
-    public DaoAuthenticationProvider daoAuthenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder());
-        return authProvider;
-    }
+  @Bean
+  public DaoAuthenticationProvider daoAuthenticationProvider() {
+    DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+    authProvider.setUserDetailsService(userDetailsService);
+    authProvider.setPasswordEncoder(passwordEncoder());
+    return authProvider;
+  }
 
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
-        return authConfig.getAuthenticationManager();
-    }
+  @Bean
+  public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig)
+      throws Exception {
+    return authConfig.getAuthenticationManager();
+  }
 
-
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                .cors(AbstractHttpConfigurer::disable)
-                .csrf(AbstractHttpConfigurer::disable)
-                .exceptionHandling(exception -> exception.authenticationEntryPoint(authEntryPointJwt))
-                .authorizeHttpRequests(requestMatcher ->
+  @Bean
+  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    http.cors(AbstractHttpConfigurer::disable)
+        .csrf(AbstractHttpConfigurer::disable)
+        .exceptionHandling(exception -> exception.authenticationEntryPoint(authEntryPointJwt))
+        .authorizeHttpRequests(
+            requestMatcher ->
                 requestMatcher
-                        .requestMatchers("/api/auth/login", "/api/auth/token", "/api/auth/register", "stomp", "/ws")
-                        .permitAll()
-                        .requestMatchers(HttpMethod.OPTIONS, "/**")
-                        .permitAll()
-                        .anyRequest()
-                        .authenticated())
-                .httpBasic(Customizer.withDefaults())
-                .authenticationProvider(daoAuthenticationProvider())
-                .addFilterBefore(restApiTokenFilter, UsernamePasswordAuthenticationFilter.class);
-        return http.build();
-    }
+                    .requestMatchers(
+                        "/api/auth/login", "/api/auth/token", "/api/auth/register", "stomp", "/ws")
+                    .permitAll()
+                    .requestMatchers(HttpMethod.OPTIONS, "/**")
+                    .permitAll()
+                    .anyRequest()
+                    .authenticated())
+        .httpBasic(Customizer.withDefaults())
+        .authenticationProvider(daoAuthenticationProvider())
+        .addFilterBefore(restApiTokenFilter, UsernamePasswordAuthenticationFilter.class);
+    return http.build();
+  }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+  @Bean
+  public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder();
+  }
 }

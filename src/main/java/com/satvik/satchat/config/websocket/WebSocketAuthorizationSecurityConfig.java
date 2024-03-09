@@ -5,14 +5,15 @@ import org.springframework.security.config.annotation.web.messaging.MessageSecur
 import org.springframework.security.config.annotation.web.socket.AbstractSecurityWebSocketMessageBrokerConfigurer;
 
 @Configuration
-public class WebSocketAuthorizationSecurityConfig extends AbstractSecurityWebSocketMessageBrokerConfigurer {
-    @Override
-    protected boolean sameOriginDisabled() {
-        return true;
-    }
+public class WebSocketAuthorizationSecurityConfig
+    extends AbstractSecurityWebSocketMessageBrokerConfigurer {
+  @Override
+  protected boolean sameOriginDisabled() {
+    return true;
+  }
 
-    @Override
-    protected void configureInbound(MessageSecurityMetadataSourceRegistry messages) {
-        messages.anyMessage().authenticated();
-    }
+  @Override
+  protected void configureInbound(MessageSecurityMetadataSourceRegistry messages) {
+    messages.anyMessage().authenticated();
+  }
 }
