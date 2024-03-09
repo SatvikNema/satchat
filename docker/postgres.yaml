@@ -2,12 +2,12 @@ version: '3.8'
 services:
   postgres_db:
     image: postgres:latest
-    container_name: PostgresCont
+    container_name: PostgresCont3
     restart: always
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres123
     ports:
-      - '5433:5432'
+      - '5435:5432'
     volumes:
-      - /Users/satvik.nema/docker/postgres/data:/var/lib/postgresql/data
+      - /Users/satvik.nema/docker/postgres3/data:/var/lib/postgresql/data

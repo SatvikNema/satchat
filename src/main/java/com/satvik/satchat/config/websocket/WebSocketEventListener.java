@@ -1,12 +1,5 @@
 package com.satvik.satchat.config.websocket;
 
-import com.satvik.satchat.config.UserDetailsImpl;
-import com.satvik.satchat.entity.MessagesInTransitEntity;
-import com.satvik.satchat.entity.UserEntity;
-import com.satvik.satchat.model.ChatMessage;
-import com.satvik.satchat.model.MessageType;
-import com.satvik.satchat.repository.UserRepository;
-import com.satvik.satchat.service.ChatService;
 import com.satvik.satchat.service.OnlineOfflineService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

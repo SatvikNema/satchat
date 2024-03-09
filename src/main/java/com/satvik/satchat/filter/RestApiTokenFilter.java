@@ -50,14 +50,6 @@ public class RestApiTokenFilter extends OncePerRequestFilter {
             logger.error("Cannot set user authentication: {}", e);
         }
 
-        // god save me
-        response.addHeader("Access-Control-Allow-Origin", "http://localhost:3000");
-        response.addHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE, PUT");
-        response.addHeader("Access-Control-Allow-Headers", "Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Authorization");
-        response.addHeader("Access-Control-Expose-Headers", "Access-Control-Allow-Origin, Access-Control-Allow-Credentials");
-        response.addHeader("Access-Control-Allow-Credentials", "true");
-        response.addIntHeader("Access-Control-Max-Age", 10);
-
         filterChain.doFilter(request, response);
     }
 
