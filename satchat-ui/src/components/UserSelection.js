@@ -9,20 +9,20 @@ const dropdownConfig = {
   labelText: "Choose a user: ",
   dropdownValues: [
     {
-      selectValue: "Satvik",
-      displayText: "Satvik",
+      selectValue: "Alice",
+      displayText: "Alice",
     },
     {
-      selectValue: "Keshav",
-      displayText: "Keshav",
+      selectValue: "Bob",
+      displayText: "Bob",
     },
     {
-      selectValue: "Rachana",
-      displayText: "Rachana",
+      selectValue: "Eve",
+      displayText: "Eve",
     },
     {
-      selectValue: "Kartik",
-      displayText: "Kartik",
+      selectValue: "Jane",
+      displayText: "Jane",
     },
   ],
 };

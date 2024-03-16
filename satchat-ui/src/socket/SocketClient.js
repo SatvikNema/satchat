@@ -30,7 +30,7 @@ class SocketClient {
   };
 
   subscribe = (topic, callback) => {
-    this.client.subscribe(topic, (message) => {
+    return this.client.subscribe(topic, (message) => {
       callback(message);
     });
   };

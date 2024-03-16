@@ -31,7 +31,9 @@ function App() {
       <SocketClientContext.Provider value={socketClientContext}>
         {context && context.username ? (
           <div>
-            Currently logged in: {context.username}
+            <div>
+              <h3>Currently logged in: {context.username}</h3>
+            </div>
             <br />
             <FriendView />
           </div>

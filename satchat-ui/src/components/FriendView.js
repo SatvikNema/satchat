@@ -68,7 +68,6 @@ const FriendView = () => {
 
   return (
     <div>
-      FriendView
       {friendList.length > 0 &&
         friendList.map((friend, idx) => {
           let count =

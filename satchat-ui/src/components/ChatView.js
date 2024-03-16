@@ -3,6 +3,7 @@ import TextInput from "./TextInput";
 import Button from "./Button";
 import SocketClientContext from "../context/SocketClientContext";
 import backendClient from "../utils/BackendClient";
+import "../styles/ChatView.css";
 
 const ChatView = ({ friend }) => {
   const { connectionId, connectionUsername, convId } = friend;
@@ -62,7 +63,9 @@ const ChatView = ({ friend }) => {
 
   return (
     <div>
-      <div>Chatting with {connectionUsername}</div>
+      <div>
+        <h4>Chating with {connectionUsername}</h4>
+      </div>
       {messages[connectionId] &&
         messages[connectionId].length > 0 &&
         messages[connectionId].map((message, idx) => {
@@ -75,7 +78,8 @@ const ChatView = ({ friend }) => {
           } else {
             return (
               <div key={idx}>
-                {message.senderUsername}: (new) {message.content}
+                {message.senderUsername}:{" "}
+                <span className="NewMessage">(new)</span> {message.content}
               </div>
             );
           }
@@ -83,7 +87,7 @@ const ChatView = ({ friend }) => {
 
       <TextInput
         id="userMessage"
-        labelText="User Message"
+        labelText="Your message: "
         onChange={onInputChange}
         value={userMessage}
       ></TextInput>
