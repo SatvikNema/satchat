@@ -1,5 +1,6 @@
 package com.satvik.satchat.config;
 
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import lombok.*;
@@ -24,6 +25,19 @@ public class UserDetailsImpl implements UserDetails {
   private final boolean accountNonExpired;
 
   private final boolean accountNonLocked;
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    UserDetailsImpl that = (UserDetailsImpl) o;
+    return Objects.equals(id, that.id);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id);
+  }
 
   private final boolean credentialsNonExpired;
 

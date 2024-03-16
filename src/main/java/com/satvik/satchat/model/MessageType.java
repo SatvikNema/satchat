@@ -2,7 +2,7 @@ package com.satvik.satchat.model;
 
 public enum MessageType {
   CHAT,
-  JOIN,
-  LEAVE,
-  UNSEEN
+  UNSEEN,
+  FRIEND_ONLINE,
+  FRIEND_OFFLINE
 }

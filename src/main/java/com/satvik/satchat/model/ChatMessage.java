@@ -21,4 +21,6 @@ public class ChatMessage {
 
   private UUID receiverId;
   private String receiverUsername;
+
+  private UserConnection userConnection;
 }

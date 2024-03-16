@@ -28,24 +28,25 @@ import org.springframework.util.CollectionUtils;
 public class ConversationService {
   private final UserRepository userRepository;
   private final SecurityUtils securityUtils;
-
   private final ChatMessageMapper chatMessageMapper;
-
   private final MessagesInTransitRepository messagesInTransitRepository;
-
   private final ConversationRepository conversationRepository;
+
+  private OnlineOfflineService onlineOfflineService;
 
   public ConversationService(
       UserRepository userRepository,
       SecurityUtils securityUtils,
       MessagesInTransitRepository messagesInTransitRepository,
       ChatMessageMapper chatMessageMapper,
-      ConversationRepository conversationRepository) {
+      ConversationRepository conversationRepository,
+      OnlineOfflineService onlineOfflineService) {
     this.userRepository = userRepository;
     this.securityUtils = securityUtils;
     this.messagesInTransitRepository = messagesInTransitRepository;
     this.chatMessageMapper = chatMessageMapper;
     this.conversationRepository = conversationRepository;
+    this.onlineOfflineService = onlineOfflineService;
   }
 
   public List<UserConnection> getUserFriends() {
@@ -66,6 +67,8 @@ public class ConversationService {
                     .connectionId(user.getId())
                     .connectionUsername(user.getUsername())
                     .convId(getConvId(user, thisUser))
+                    .unSeen(0)
+                    .isOnline(onlineOfflineService.isUserOnline(user.getId()))
                     .build())
         .toList();
   }

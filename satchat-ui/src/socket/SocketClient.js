@@ -29,9 +29,14 @@ class SocketClient {
     this.client.deactivate();
   };
 
-  subscribe = (topic, callback) => {
+  subscribe = (topic, callback, ...forMessageTypes) => {
     return this.client.subscribe(topic, (message) => {
-      callback(message);
+      if (
+        !forMessageTypes ||
+        forMessageTypes.includes(JSON.parse(message.body).messageType)
+      ) {
+        callback(message);
+      }
     });
   };
 

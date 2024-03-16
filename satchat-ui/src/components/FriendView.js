@@ -15,7 +15,7 @@ const FriendView = () => {
     setSelectedFriend(friend);
     setFriendList((prev) => {
       for (let d of prev) {
-        if (d.connectionId == friend.connectionId) {
+        if (d.connectionId === friend.connectionId) {
           d.unSeen = 0;
         }
       }
@@ -27,14 +27,11 @@ const FriendView = () => {
     let data = [];
     const loadFriends = async () => {
       data = await backendClient.getFriends();
-      for (let d of data) {
-        d.unSeen = 0;
-      }
       const apiResponse = await backendClient.getUnseenMessages();
       if (apiResponse && apiResponse.length > 0) {
         apiResponse.forEach((r) => {
           for (let d of data) {
-            if (d.connectionId == r.fromUser) {
+            if (d.connectionId === r.fromUser) {
               d.unSeen = r.count;
             }
           }
@@ -46,18 +43,53 @@ const FriendView = () => {
 
     loadFriends();
 
-    let subscription = socketClient.subscribe(`/topic/${userId}`, (message) => {
-      console.log(message);
-      const { senderId } = JSON.parse(message.body);
-      setFriendList((prev) => {
-        for (let d of prev) {
-          if (d.connectionId == senderId) {
-            d.unSeen += 1;
-          }
+    let subscription = socketClient.subscribe(
+      `/topic/${userId}`,
+
+      (message) => {
+        console.log(message);
+        const messageBody = JSON.parse(message.body);
+        if (
+          messageBody.messageType === "CHAT" ||
+          messageBody.messageType === "UNSEEN"
+        ) {
+          const { senderId } = messageBody;
+          setFriendList((prev) => {
+            for (let d of prev) {
+              if (d.connectionId === senderId) {
+                d.unSeen += 1;
+              }
+            }
+            return [...prev];
+          });
+        } else if (messageBody.messageType === "FRIEND_OFFLINE") {
+          // do offline shit
+          setFriendList((prev) => {
+            for (let d of prev) {
+              if (d.connectionId === messageBody.userConnection.connectionId) {
+                d.isOnline = false;
+                break;
+              }
+            }
+            return [...prev];
+          });
+        } else if (messageBody.messageType === "FRIEND_ONLINE") {
+          setFriendList((prev) => {
+            for (let d of prev) {
+              if (d.connectionId === messageBody.userConnection.connectionId) {
+                d.isOnline = true;
+                break;
+              }
+            }
+            return [...prev];
+          });
         }
-        return [...prev];
-      });
-    });
+      },
+      "CHAT",
+      "UNSEEN",
+      "FRIEND_ONLINE",
+      "FRIEND_OFFLINE"
+    );
 
     return () => {
       if (subscription) {
@@ -72,7 +104,8 @@ const FriendView = () => {
         friendList.map((friend, idx) => {
           let count =
             friend.unSeen && friend.unSeen > 0 ? `(${friend.unSeen})` : "";
-          let displayText = `Chat with ${friend.connectionUsername} ${count}`;
+          let onlineStatusText = friend.isOnline ? "(online)" : "";
+          let displayText = `${onlineStatusText} Chat with ${friend.connectionUsername} ${count}`;
           return (
             <div key={idx}>
               <Button

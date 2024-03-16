@@ -51,9 +51,9 @@ public class ChatService {
     UUID fromUserId = userDetails.getId();
     UUID toUserId = chatMessage.getReceiverId();
     populateContext(chatMessage, userDetails);
-    boolean isTargetOnline = onlineOfflineService.isUserOnline(targetUsername);
+    boolean isTargetOnline = onlineOfflineService.isUserOnline(toUserId);
     boolean isTargetSubscribed =
-        onlineOfflineService.isUserSubscribed(targetUsername, "/topic/" + conversationId);
+        onlineOfflineService.isUserSubscribed(toUserId, "/topic/" + conversationId);
     chatMessage.setId(UUID.randomUUID());
 
     if (!isTargetOnline || !isTargetSubscribed) {
