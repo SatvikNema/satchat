@@ -34,7 +34,6 @@ const UserSelection = ({ onUserContextSet }) => {
 
   return (
     <div>
-      UserSelection
       <Dropdown
         onSelect={(e) => setUserName(e.target.value)}
         selectedValue={username}

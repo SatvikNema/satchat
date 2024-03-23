@@ -2,12 +2,9 @@ package com.satvik.satchat.service;
 
 import com.satvik.satchat.config.UserDetailsImpl;
 import com.satvik.satchat.entity.ConversationEntity;
-import com.satvik.satchat.entity.MessagesInTransitEntity;
 import com.satvik.satchat.model.ChatMessage;
+import com.satvik.satchat.model.MessageDeliveryStatusEnum;
 import com.satvik.satchat.repository.ConversationRepository;
-import com.satvik.satchat.repository.MessagesInTransitRepository;
-import java.sql.Timestamp;
-import java.time.Instant;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,8 +19,6 @@ public class ChatService {
 
   private final SimpMessageSendingOperations simpMessageSendingOperations;
 
-  private final MessagesInTransitRepository messagesInTransitRepository;
-
   private final ConversationRepository conversationRepository;
 
   private final OnlineOfflineService onlineOfflineService;
@@ -31,22 +26,15 @@ public class ChatService {
   @Autowired
   public ChatService(
       SimpMessageSendingOperations simpMessageSendingOperations,
-      MessagesInTransitRepository messagesInTransitRepository,
       ConversationRepository conversationRepository,
       OnlineOfflineService onlineOfflineService) {
     this.simpMessageSendingOperations = simpMessageSendingOperations;
-    this.messagesInTransitRepository = messagesInTransitRepository;
     this.conversationRepository = conversationRepository;
     this.onlineOfflineService = onlineOfflineService;
   }
 
   public void sendMessageToConvId(
       ChatMessage chatMessage, String conversationId, SimpMessageHeaderAccessor headerAccessor) {
-    String sessionId = headerAccessor.getSessionId();
-    log.info(
-        "{} for conv id {} for session id: {}", chatMessage.toString(), conversationId, sessionId);
-    String targetUsername = chatMessage.getReceiverUsername();
-
     UserDetailsImpl userDetails = getUser();
     UUID fromUserId = userDetails.getId();
     UUID toUserId = chatMessage.getReceiverId();
@@ -56,39 +44,34 @@ public class ChatService {
         onlineOfflineService.isUserSubscribed(toUserId, "/topic/" + conversationId);
     chatMessage.setId(UUID.randomUUID());
 
-    if (!isTargetOnline || !isTargetSubscribed) {
-      MessagesInTransitEntity messagesInTransitEntity =
-          MessagesInTransitEntity.builder()
-              .id(chatMessage.getId())
-              .read(false)
-              .time(Timestamp.from(Instant.now()))
-              .fromUser(fromUserId)
-              .toUser(toUserId)
-              .senderNotified(false)
-              .content(chatMessage.getContent())
-              .convId(conversationId)
-              .build();
-      messagesInTransitRepository.save(messagesInTransitEntity);
-      if (!isTargetOnline) {
-        log.info(
-            "{} is not online. Content saved in unseen messages",
-            chatMessage.getReceiverUsername());
-      } else {
-        log.info(
-            "{} is online but not subscribed. sending to their private subscription",
-            chatMessage.getReceiverUsername());
-        simpMessageSendingOperations.convertAndSend("/topic/" + toUserId.toString(), chatMessage);
-      }
+    ConversationEntity.ConversationEntityBuilder conversationEntityBuilder =
+        ConversationEntity.builder();
+
+    conversationEntityBuilder
+        .id(chatMessage.getId())
+        .fromUser(fromUserId)
+        .toUser(toUserId)
+        .content(chatMessage.getContent())
+        .convId(conversationId);
+    if (!isTargetOnline) {
+      log.info(
+          "{} is not online. Content saved in unseen messages", chatMessage.getReceiverUsername());
+      conversationEntityBuilder.deliveryStatus(MessageDeliveryStatusEnum.NOT_DELIVERED.toString());
+      chatMessage.setMessageDeliveryStatusEnum(MessageDeliveryStatusEnum.NOT_DELIVERED);
+
+    } else if (!isTargetSubscribed) {
+      log.info(
+          "{} is online but not subscribed. sending to their private subscription",
+          chatMessage.getReceiverUsername());
+      conversationEntityBuilder.deliveryStatus(MessageDeliveryStatusEnum.DELIVERED.toString());
+      chatMessage.setMessageDeliveryStatusEnum(MessageDeliveryStatusEnum.DELIVERED);
+      simpMessageSendingOperations.convertAndSend("/topic/" + toUserId.toString(), chatMessage);
+
     } else {
-      ConversationEntity conversationEntity =
-          ConversationEntity.builder()
-              .content(chatMessage.getContent())
-              .fromUser(fromUserId)
-              .toUser(toUserId)
-              .id(chatMessage.getId())
-              .build();
-      conversationRepository.save(conversationEntity);
+      conversationEntityBuilder.deliveryStatus(MessageDeliveryStatusEnum.SEEN.toString());
+      chatMessage.setMessageDeliveryStatusEnum(MessageDeliveryStatusEnum.SEEN);
     }
+    conversationRepository.save(conversationEntityBuilder.build());
     simpMessageSendingOperations.convertAndSend("/topic/" + conversationId, chatMessage);
   }
 

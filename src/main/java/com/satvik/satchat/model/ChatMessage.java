@@ -1,5 +1,6 @@
 package com.satvik.satchat.model;
 
+import java.util.List;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,4 +24,8 @@ public class ChatMessage {
   private String receiverUsername;
 
   private UserConnection userConnection;
+
+  private MessageDeliveryStatusEnum messageDeliveryStatusEnum;
+
+  private List<MessageDeliveryStatusUpdate> messageDeliveryStatusUpdates;
 }

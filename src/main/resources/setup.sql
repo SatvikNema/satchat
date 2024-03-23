@@ -19,23 +19,14 @@ create table user_roles(
 
 create table conversation (
                               id UUID primary key,
+    conv_id varchar,
                               from_user UUID,
                               to_user UUID,
-                              time timestamp,
-                              content text
+                              content text,
+    delivery_status varchar,
+    time timestamp,
+    last_modified timestamp
 );
-
-create table messages_in_transit(
-                                    id UUID primary key,
-                                    from_user UUID,
-                                    to_user UUID,
-                                    time timestamp,
-                                    read bool,
-                                    sender_notified bool,
-                                    content text,
-                                    conv_id varchar
-);
-
 
 insert into roles(id, name) values
                                 (gen_random_uuid(), 'USER'),

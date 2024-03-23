@@ -8,8 +8,9 @@ import UserContext from "../context/UserContext";
 const FriendView = () => {
   const [friendList, setFriendList] = useState([]);
   const [selectedFriend, setSelectedFriend] = useState(null);
-  const { id: userId, username } = useContext(UserContext);
+  const { id: userId } = useContext(UserContext);
   const { socketClient } = useContext(SocketClientContext);
+  const [deliveryStatuses, setDeliveryStatuses] = useState([]);
 
   const handleSelectedFriend = (friend) => {
     setSelectedFriend(friend);
@@ -47,8 +48,9 @@ const FriendView = () => {
       `/topic/${userId}`,
 
       (message) => {
-        console.log(message);
         const messageBody = JSON.parse(message.body);
+        // console.log("from user id");
+        // console.log(messageBody);
         if (
           messageBody.messageType === "CHAT" ||
           messageBody.messageType === "UNSEEN"
@@ -83,12 +85,15 @@ const FriendView = () => {
             }
             return [...prev];
           });
+        } else if (messageBody.messageType === "MESSAGE_DELIVERY_UPDATE") {
+          setDeliveryStatuses(messageBody.messageDeliveryStatusUpdates);
         }
       },
       "CHAT",
       "UNSEEN",
       "FRIEND_ONLINE",
-      "FRIEND_OFFLINE"
+      "FRIEND_OFFLINE",
+      "MESSAGE_DELIVERY_UPDATE"
     );
 
     return () => {
@@ -96,7 +101,7 @@ const FriendView = () => {
         subscription.unsubscribe();
       }
     };
-  }, []);
+  }, [socketClient, userId]);
 
   return (
     <div>
@@ -120,7 +125,10 @@ const FriendView = () => {
       {selectedFriend && (
         <div>
           <br />
-          <ChatView friend={selectedFriend}></ChatView>{" "}
+          <ChatView
+            friend={selectedFriend}
+            deliveryStatuses={deliveryStatuses}
+          ></ChatView>
         </div>
       )}
     </div>

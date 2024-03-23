@@ -4,22 +4,24 @@ import static com.satvik.satchat.DbBoiii.getConvId;
 
 import com.satvik.satchat.config.UserDetailsImpl;
 import com.satvik.satchat.entity.ConversationEntity;
-import com.satvik.satchat.entity.MessagesInTransitEntity;
 import com.satvik.satchat.entity.UserEntity;
 import com.satvik.satchat.exception.EntityException;
 import com.satvik.satchat.mapper.ChatMessageMapper;
 import com.satvik.satchat.model.ChatMessage;
+import com.satvik.satchat.model.MessageDeliveryStatusEnum;
 import com.satvik.satchat.model.MessageType;
 import com.satvik.satchat.model.UnseenMessageCountResponse;
 import com.satvik.satchat.model.UserConnection;
 import com.satvik.satchat.repository.ConversationRepository;
-import com.satvik.satchat.repository.MessagesInTransitRepository;
 import com.satvik.satchat.repository.UserRepository;
 import com.satvik.satchat.utils.SecurityUtils;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -29,24 +31,23 @@ public class ConversationService {
   private final UserRepository userRepository;
   private final SecurityUtils securityUtils;
   private final ChatMessageMapper chatMessageMapper;
-  private final MessagesInTransitRepository messagesInTransitRepository;
   private final ConversationRepository conversationRepository;
-
-  private OnlineOfflineService onlineOfflineService;
+  private final OnlineOfflineService onlineOfflineService;
+  private final SimpMessageSendingOperations simpMessageSendingOperations;
 
   public ConversationService(
       UserRepository userRepository,
       SecurityUtils securityUtils,
-      MessagesInTransitRepository messagesInTransitRepository,
       ChatMessageMapper chatMessageMapper,
       ConversationRepository conversationRepository,
-      OnlineOfflineService onlineOfflineService) {
+      OnlineOfflineService onlineOfflineService,
+      SimpMessageSendingOperations simpMessageSendingOperations) {
     this.userRepository = userRepository;
     this.securityUtils = securityUtils;
-    this.messagesInTransitRepository = messagesInTransitRepository;
     this.chatMessageMapper = chatMessageMapper;
     this.conversationRepository = conversationRepository;
     this.onlineOfflineService = onlineOfflineService;
+    this.simpMessageSendingOperations = simpMessageSendingOperations;
   }
 
   public List<UserConnection> getUserFriends() {
@@ -73,24 +74,30 @@ public class ConversationService {
         .toList();
   }
 
-  public List<UnseenMessageCountResponse> getUnseenMessages() {
+  public List<UnseenMessageCountResponse> getUnseenMessageCount() {
     List<UnseenMessageCountResponse> result = new ArrayList<>();
     UserDetailsImpl userDetails = securityUtils.getUser();
-    List<Object[]> unseenMessages =
-        messagesInTransitRepository.findUnseenMessagesCount(userDetails.getId());
+    List<ConversationEntity> unseenMessages =
+        conversationRepository.findUnseenMessagesCount(userDetails.getId());
+
     if (!CollectionUtils.isEmpty(unseenMessages)) {
+      Map<UUID, List<ConversationEntity>> unseenMessageCountByUser = new HashMap<>();
+      for (ConversationEntity entity : unseenMessages) {
+        List<ConversationEntity> values =
+            unseenMessageCountByUser.getOrDefault(entity.getFromUser(), new ArrayList<>());
+        values.add(entity);
+        unseenMessageCountByUser.put(entity.getFromUser(), values);
+      }
       log.info("there are some unseen messages for {}", userDetails.getUsername());
-      //            result = chatMessageMapper.toChatMessages(unseenMessages, userDetails,
-      // MessageType.UNSEEN);
-      result =
-          unseenMessages.stream()
-              .map(
-                  unseenMessage ->
-                      UnseenMessageCountResponse.builder()
-                          .count((Long) unseenMessage[1])
-                          .fromUser((UUID) unseenMessage[0])
-                          .build())
-              .toList();
+      unseenMessageCountByUser.forEach(
+          (user, entities) -> {
+            result.add(
+                UnseenMessageCountResponse.builder()
+                    .count((long) entities.size())
+                    .fromUser(user)
+                    .build());
+            updateMessageDelivery(user, entities, MessageDeliveryStatusEnum.DELIVERED);
+          });
     }
     return result;
   }
@@ -98,36 +105,34 @@ public class ConversationService {
   public List<ChatMessage> getUnseenMessages(UUID fromUserId) {
     List<ChatMessage> result = new ArrayList<>();
     UserDetailsImpl userDetails = securityUtils.getUser();
-    List<MessagesInTransitEntity> unseenMessages =
-        messagesInTransitRepository.findUnseenMessages(userDetails.getId(), fromUserId);
+    List<ConversationEntity> unseenMessages =
+        conversationRepository.findUnseenMessages(userDetails.getId(), fromUserId);
+
     if (!CollectionUtils.isEmpty(unseenMessages)) {
       log.info(
           "there are some unseen messages for {} from {}", userDetails.getUsername(), fromUserId);
+      updateMessageDelivery(fromUserId, unseenMessages, MessageDeliveryStatusEnum.SEEN);
       result = chatMessageMapper.toChatMessages(unseenMessages, userDetails, MessageType.UNSEEN);
     }
     return result;
   }
 
+  private void updateMessageDelivery(
+      UUID user,
+      List<ConversationEntity> entities,
+      MessageDeliveryStatusEnum messageDeliveryStatusEnum) {
+    entities.forEach(e -> e.setDeliveryStatus(messageDeliveryStatusEnum.toString()));
+    onlineOfflineService.notifySender(user, entities, messageDeliveryStatusEnum);
+    conversationRepository.saveAll(entities);
+  }
+
   public List<ChatMessage> setReadMessages(List<ChatMessage> chatMessages) {
     List<UUID> inTransitMessageIds = chatMessages.stream().map(ChatMessage::getId).toList();
-    List<MessagesInTransitEntity> messagesInTransitEntities =
-        messagesInTransitRepository.findAllById(inTransitMessageIds);
-    messagesInTransitEntities.forEach(message -> message.setRead(true));
-    List<MessagesInTransitEntity> saved =
-        messagesInTransitRepository.saveAll(messagesInTransitEntities);
-
     List<ConversationEntity> conversationEntities =
-        chatMessages.stream()
-            .map(
-                chatMessage ->
-                    ConversationEntity.builder()
-                        .content(chatMessage.getContent())
-                        .fromUser(chatMessage.getSenderId())
-                        .toUser(chatMessage.getReceiverId())
-                        .id(UUID.randomUUID())
-                        .build())
-            .toList();
-    conversationRepository.saveAll(conversationEntities);
+        conversationRepository.findAllById(inTransitMessageIds);
+    conversationEntities.forEach(
+        message -> message.setDeliveryStatus(MessageDeliveryStatusEnum.SEEN.toString()));
+    List<ConversationEntity> saved = conversationRepository.saveAll(conversationEntities);
 
     return chatMessageMapper.toChatMessages(saved, securityUtils.getUser(), MessageType.CHAT);
   }

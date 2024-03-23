@@ -1,8 +1,11 @@
 package com.satvik.satchat.service;
 
 import com.satvik.satchat.config.UserDetailsImpl;
+import com.satvik.satchat.entity.ConversationEntity;
 import com.satvik.satchat.entity.UserEntity;
 import com.satvik.satchat.model.ChatMessage;
+import com.satvik.satchat.model.MessageDeliveryStatusEnum;
+import com.satvik.satchat.model.MessageDeliveryStatusUpdate;
 import com.satvik.satchat.model.MessageType;
 import com.satvik.satchat.model.UserConnection;
 import com.satvik.satchat.model.UserResponse;
@@ -40,20 +43,19 @@ public class OnlineOfflineService {
   }
 
   public void addOnlineUser(Principal user) {
-    if (user != null) {
-      UserDetailsImpl userDetails = getUserDetails(user);
-      log.info("{} is online", userDetails.getUsername());
-      // todo broadcast to all online friends of 'user' that it has come online
-      for (UUID id : onlineUsers) {
-        simpMessageSendingOperations.convertAndSend(
-            "/topic/" + id,
-            ChatMessage.builder()
-                .messageType(MessageType.FRIEND_ONLINE)
-                .userConnection(UserConnection.builder().connectionId(userDetails.getId()).build())
-                .build());
-      }
-      onlineUsers.add(userDetails.getId());
+    if (user == null) return;
+    UserDetailsImpl userDetails = getUserDetails(user);
+    log.info("{} is online", userDetails.getUsername());
+    // todo broadcast to all online friends of 'user' that it has come online
+    for (UUID id : onlineUsers) {
+      simpMessageSendingOperations.convertAndSend(
+          "/topic/" + id,
+          ChatMessage.builder()
+              .messageType(MessageType.FRIEND_ONLINE)
+              .userConnection(UserConnection.builder().connectionId(userDetails.getId()).build())
+              .build());
     }
+    onlineUsers.add(userDetails.getId());
   }
 
   public void removeOnlineUser(Principal user) {
@@ -118,5 +120,37 @@ public class OnlineOfflineService {
     List<UserEntity> users = userRepository.findAllById(userSubscribed.keySet());
     users.forEach(user -> result.put(user.getUsername(), userSubscribed.get(user.getId())));
     return result;
+  }
+
+  public void notifySender(
+      UUID senderId,
+      List<ConversationEntity> entities,
+      MessageDeliveryStatusEnum messageDeliveryStatusEnum) {
+    if (!isUserOnline(senderId)) {
+      log.info(
+          "{} is not online. cannot inform the socket. will persist in database",
+          senderId.toString());
+      return;
+    }
+    List<MessageDeliveryStatusUpdate> messageDeliveryStatusUpdates =
+        entities.stream()
+            .map(
+                e ->
+                    MessageDeliveryStatusUpdate.builder()
+                        .id(e.getId())
+                        .messageDeliveryStatusEnum(messageDeliveryStatusEnum)
+                        .content(e.getContent())
+                        .build())
+            .toList();
+    for (ConversationEntity entity : entities) {
+      simpMessageSendingOperations.convertAndSend(
+          "/topic/" + senderId,
+          ChatMessage.builder()
+              .id(entity.getId())
+              .messageDeliveryStatusUpdates(messageDeliveryStatusUpdates)
+              .messageType(MessageType.MESSAGE_DELIVERY_UPDATE)
+              .content(entity.getContent())
+              .build());
+    }
   }
 }

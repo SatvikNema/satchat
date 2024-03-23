@@ -1,7 +1,7 @@
 package com.satvik.satchat.mapper;
 
 import com.satvik.satchat.config.UserDetailsImpl;
-import com.satvik.satchat.entity.MessagesInTransitEntity;
+import com.satvik.satchat.entity.ConversationEntity;
 import com.satvik.satchat.entity.UserEntity;
 import com.satvik.satchat.model.ChatMessage;
 import com.satvik.satchat.model.MessageType;
@@ -22,22 +22,22 @@ public class ChatMessageMapper {
   }
 
   public List<ChatMessage> toChatMessages(
-      List<MessagesInTransitEntity> messagesInTransitEntities,
+      List<ConversationEntity> conversationEntities,
       UserDetailsImpl userDetails,
       MessageType messageType) {
     List<UUID> fromUsersIds =
-        messagesInTransitEntities.stream().map(MessagesInTransitEntity::getFromUser).toList();
+        conversationEntities.stream().map(ConversationEntity::getFromUser).toList();
     Map<UUID, String> fromUserIdsToUsername =
         userRepository.findAllById(fromUsersIds).stream()
             .collect(Collectors.toMap(UserEntity::getId, UserEntity::getUsername));
 
-    return messagesInTransitEntities.stream()
+    return conversationEntities.stream()
         .map(e -> toChatMessage(e, userDetails, fromUserIdsToUsername, messageType))
         .toList();
   }
 
   private static ChatMessage toChatMessage(
-      MessagesInTransitEntity e,
+      ConversationEntity e,
       UserDetailsImpl userDetails,
       Map<UUID, String> fromUserIdsToUsername,
       MessageType messageType) {

@@ -27,8 +27,8 @@ public class ConversationController {
   }
 
   @GetMapping("/unseenMessages")
-  public List<UnseenMessageCountResponse> getUnseenMessages() {
-    return conversationService.getUnseenMessages();
+  public List<UnseenMessageCountResponse> getUnseenMessageCount() {
+    return conversationService.getUnseenMessageCount();
   }
 
   @GetMapping("/unseenMessages/{fromUserId}")
