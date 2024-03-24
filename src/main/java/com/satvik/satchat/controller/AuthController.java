@@ -3,7 +3,11 @@ package com.satvik.satchat.controller;
 import com.satvik.satchat.config.UserDetailsImpl;
 import com.satvik.satchat.entity.RoleEntity;
 import com.satvik.satchat.entity.UserEntity;
-import com.satvik.satchat.model.*;
+import com.satvik.satchat.model.ERole;
+import com.satvik.satchat.model.JwtResponse;
+import com.satvik.satchat.model.LoginRequest;
+import com.satvik.satchat.model.MessageResponse;
+import com.satvik.satchat.model.SignupRequest;
 import com.satvik.satchat.repository.RoleRepository;
 import com.satvik.satchat.repository.UserRepository;
 import com.satvik.satchat.utils.JWTUtils;
@@ -20,7 +24,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @CrossOrigin(origins = "*")
 @RestController
