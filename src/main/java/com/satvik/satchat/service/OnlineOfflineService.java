@@ -44,7 +44,6 @@ public class OnlineOfflineService {
     if (user == null) return;
     UserDetailsImpl userDetails = getUserDetails(user);
     log.info("{} is online", userDetails.getUsername());
-    // todo broadcast to all online friends of 'user' that it has come online
     for (UUID id : onlineUsers) {
       simpMessageSendingOperations.convertAndSend(
           "/topic/" + id,

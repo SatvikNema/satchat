@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   postgres_db:
-    image: postgres:latest
+    image: postgres:16-bookworm
     container_name: PostgresCont3
     restart: always
     environment:
@@ -10,4 +10,4 @@ services:
     ports:
       - '5435:5432'
     volumes:
-      - /Users/satvik.nema/docker/postgres3/data:/var/lib/postgresql/data
+      - ~/docker/postgres3/data:/var/lib/postgresql/data
