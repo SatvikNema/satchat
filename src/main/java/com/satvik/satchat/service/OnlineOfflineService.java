@@ -28,9 +28,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class OnlineOfflineService {
   private final Set<UUID> onlineUsers;
-
   private final Map<UUID, Set<String>> userSubscribed;
-
   private final UserRepository userRepository;
   private final SimpMessageSendingOperations simpMessageSendingOperations;
 
