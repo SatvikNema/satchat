@@ -11,3 +11,4 @@ services:
       - '5435:5432'
     volumes:
       - ~/docker/postgres3/data:/var/lib/postgresql/data
+      - ~/one/more/random/path
