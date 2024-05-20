@@ -37,5 +37,3 @@ Set them up using the script `setup-users.sh`:
 cd ./scripts
 ./setup-users.sh
 ```
-
-
