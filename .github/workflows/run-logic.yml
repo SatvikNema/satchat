@@ -24,4 +24,4 @@ jobs:
 
       - name: execute py script # run file
         run: |
-          python my_file.py
+          python .github/workflows/my_file.py
