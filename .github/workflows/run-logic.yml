@@ -1,11 +1,7 @@
 name: py
 
 on:
-  pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
+  workflow_dispatch
 
 jobs:
   build:
@@ -23,7 +19,6 @@ jobs:
       - name: install python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install flake8 pytest
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       
 
