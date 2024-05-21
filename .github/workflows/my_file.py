@@ -1,13 +1,17 @@
 import os
 from github import Github
 from github import Auth
+from github.PullRequest import PullRequest
 
-access_token = os.environ['GITHUB_TOKEN']
-print(f'access token is {access_token}')
+access_token: str = os.environ.get('GITHUB_TOKEN', 'PLACEHOLDER_TOKEN')
+repo: str = os.environ.get('GITHUB_REPOSITORY', 'PLACEHOLDER_REPOSITORY')
+pull_number: int = os.environ.get('PULL_NUMBER', -1)
 auth = Auth.Token(access_token)
 g = Github(auth=auth)
 
-for repo in g.get_user().get_repos():
-    print(repo.name)
+pull_request_metadata: PullRequest = g.get_repo(repo).get_pull(pull_number)
+print('file changes:')
+for file in pull_request_metadata.get_files():
+    print(file)
 
 g.close()

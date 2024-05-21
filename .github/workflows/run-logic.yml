@@ -1,7 +1,11 @@
 name: py
 
 on:
-  workflow_dispatch
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
 
 jobs:
   build:
@@ -14,7 +18,7 @@ jobs:
       - name: setup python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.9 #install the python needed
+          python-version: 3.9
 
       - name: install python dependencies
         run: |
@@ -22,8 +26,9 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       
 
-      - name: execute py script # run file
+      - name: execute py script
         run: |
           python .github/workflows/my_file.py
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.number }} # in case of an issue/comment/review, this will no longer be a PR number, but an ID associated with that particular event!
