@@ -23,6 +23,8 @@ public class ChatService {
 
   private final OnlineOfflineService onlineOfflineService;
 
+  private static final String SOMETHING = "something";
+
   @Autowired
   public ChatService(
       SimpMessageSendingOperations simpMessageSendingOperations,
@@ -73,6 +75,14 @@ public class ChatService {
     }
     conversationRepository.save(conversationEntityBuilder.build());
     simpMessageSendingOperations.convertAndSend("/topic/" + conversationId, chatMessage);
+  }
+
+  public String functionInBetween() {
+    String result = "";
+    for (int i = 1; i <= 100_000; i++) {
+      result += String.valueOf(i);
+    }
+    return result;
   }
 
   private void populateContext(ChatMessage chatMessage, UserDetailsImpl userDetails) {
