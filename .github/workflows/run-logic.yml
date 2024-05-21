@@ -32,7 +32,9 @@ jobs:
 
       - name: execute py script
         run: |
-          python .github/workflows/my_file.py
+          python .github/workflows/scripts/my_file.py
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.number }} # in case of an issue/comment/review, this will no longer be a PR number, but an ID associated with that particular event!
+          TARGET_BRANCH: ${{ github.head_ref }}
+          SOURCE_BRANCH: ${{ github.base_ref }}
