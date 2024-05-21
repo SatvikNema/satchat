@@ -38,6 +38,8 @@ cd ./scripts
 ./setup-users.sh
 ```
 
-
+hey!! this is a readme update!
+one more update
+ikr!
 
 
