@@ -23,5 +23,7 @@ jobs:
       
 
       - name: execute py script # run file
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python .github/workflows/my_file.py
