@@ -5,7 +5,7 @@ from github_client import gh_pull_request
 
 
 def analyse(file_change_metadata: List[Dict]):
-    add_issue_comment("looks good!")
+    add_issue_comment("lookinggg good!")
 
 
 def generate_prompt():
