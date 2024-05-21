@@ -1,22 +1,24 @@
-import os
-from github import Github
-from github import Auth
-from github.PullRequest import PullRequest
+import patch_parser
+from code_analyser import analyse
+from env import base_branch, source_branch
+from github_client import gh_pull_request, gh_repository, gh_client_instance
 
-access_token: str = os.environ['GITHUB_TOKEN']
-repo: str = os.environ['GITHUB_REPOSITORY']
-pull_number: int = int(os.environ['PR_NUMBER'])
-commit_hash: str = os.environ.get('GITHUB_SHA', "<HASH NOT AVAILABLE>")
+file_change_metadata = []
+for file in gh_pull_request.get_files():
+    filename = file.filename
+    lines_changed = patch_parser.get_lines_changed(file.patch)
 
-auth = Auth.Token(access_token)
-g = Github(auth=auth)
+    old_contents = gh_repository.get_contents(filename, ref=base_branch)
+    new_contents = gh_repository.get_contents(filename, ref=source_branch)
 
-pull_request_metadata: PullRequest = g.get_repo(repo).get_pull(pull_number)
-print('file changes:')
-for file in pull_request_metadata.get_files():
-    print(file)
+    file_change_metadata.append({
+        'filename': filename,
+        'old_content': old_contents,
+        'old_lines': list(map(lambda e: e[0], lines_changed)),
+        'new_content': new_contents,
+        'new_lines': list(map(lambda e: e[1], lines_changed))
+    })
 
-comments_url = pull_request_metadata.comments_url
-pull_request_metadata.create_issue_comment(f"<p>for <em>{commit_hash}</em></p> looks good!")
 
-g.close()
+analyse(file_change_metadata)
+gh_client_instance.close()
