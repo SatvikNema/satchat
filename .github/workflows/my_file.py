@@ -5,7 +5,7 @@ from github.PullRequest import PullRequest
 
 access_token: str = os.environ.get('GITHUB_TOKEN', 'PLACEHOLDER_TOKEN')
 repo: str = os.environ.get('GITHUB_REPOSITORY', 'PLACEHOLDER_REPOSITORY')
-pull_number: int = os.environ.get('PR_NUMBER', -1)
+pull_number: int = int(os.environ.get('PR_NUMBER', "-1"))
 auth = Auth.Token(access_token)
 g = Github(auth=auth)
 
