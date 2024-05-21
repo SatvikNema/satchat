@@ -39,5 +39,6 @@ cd ./scripts
 ```
 
 hey!! this is a readme update!
+ikr!
 
 
