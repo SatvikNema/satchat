@@ -32,6 +32,8 @@ public class OnlineOfflineService {
   private final UserRepository userRepository;
   private final SimpMessageSendingOperations simpMessageSendingOperations;
 
+  private static final String IS_ACTIVE = "is_active";
+
   public OnlineOfflineService(
       UserRepository userRepository, SimpMessageSendingOperations simpMessageSendingOperations) {
     this.onlineUsers = new ConcurrentSkipListSet<>();
@@ -149,5 +151,9 @@ public class OnlineOfflineService {
               .content(entity.getContent())
               .build());
     }
+  }
+
+  public void display() {
+    System.out.println("this is a function");
   }
 }

@@ -9,6 +9,10 @@ public class DbBoiii {
     String id1 = user1.getId().toString();
     String id2 = user2.getId().toString();
 
+    System.out.println("hello world");
+    int x = 100;
+    int y = 200;
+
     return id1.compareTo(id2) > 0 ? id2 + "_" + id1 : id1 + "_" + id2;
   }
 }
